@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS =
-LDFLAGS = -lallegro -lm
-APPS = hello event draw move
+LDFLAGS = -lm -lallegro -lallegro_image -lallegro_font -lallegro_ttf
+APPS = hello event draw move image font
 
 all: $(APPS)
 
