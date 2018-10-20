@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="right-down" width="40" height="30" tilewidth="16" tileheight="16" infinite="0" nextlayerid="61" nextobjectid="1">
+ <tileset firstgid="1" name="colony-db32-other-ready" tilewidth="16" tileheight="16" tilecount="1105" columns="17">
+  <image source="tilesets/colony-other.png" width="272" height="1040"/>
+ </tileset>
+ <tileset firstgid="1106" name="colony-db32-grounds-ready" tilewidth="16" tileheight="16" tilecount="1020" columns="20">
+  <image source="tilesets/colony-grounds.png" width="320" height="816"/>
+ </tileset>
+ <tileset firstgid="2126" name="colony-db32-buildings-ready" tilewidth="16" tileheight="16" tilecount="2600" columns="20">
+  <image source="tilesets/colony-buildings.png" width="320" height="2080"/>
+ </tileset>
+ <layer id="49" name="darkness" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJztw6ENAAAMAjDM/v8WzRsTbdJeUlVVVVV9evlfmM0=
+  </data>
+ </layer>
+ <layer id="50" name="Basic Tile Layer" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzt1kEOQDAQBdBKhCUbJ+AOnIOdA7BzAO7AhS1MExuJtjGmTJhJ/pK8TL9UEiuVIJJCTNOFSvVEwdjEJz7x4Xw1vHN42RdACoOPcndYn95dxdz3RPe+6LN1j4PP1j0uPtuIz9y73NG9N316b6Wje9R3x1Wfa6h39yefj7O969OmZo8P212fj/PE+jLIGh19Izw/QVoGvrMdzvD8EvrdI8XdwcX31D8z9vsomftMIz6+vg38hi3t
+  </data>
+ </layer>
+ <layer id="51" name="Upper Tile Layer" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzbzcrAsJtIvAeI6Q2IddtQcN86IJZgG7zuA4WfDonuS2Ohr/tIBSD3pSNhWrrvIBA/J9GNVUA3VSPhKBLdSazb1gLxBSB+S6L7pgPdMgMJo7t3ORofHZMSt6S6jRj37kbjT0SXH+Cy5TyBuB5o9xECpOSNFYO8fB7M9Qcs/w5W91Er/1LLfeeR6PMDFHYg8IYVNxZgQ7AHIuwIARU6t1VGwSgYBaNgFIyCUTAKiAEA2/2m9w==
+  </data>
+ </layer>
+ <layer id="52" name="On-Ground-1" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJztl8ENgkAQReeAu7al1qDWoPaBxhIAWxC9aAHEGogXtQbhyIFvssSEcEF2ZYzzknfczcsedjJEggtCRRTBneq7pJkYXVd4ZNyXwgvTvoRxmyAI7vA10brmRvdd9SZAS1gzYtR3QssWJo77ikG38wHT96uo3vHlmWGfIAi/z80juhsfnp07fYuz84mmzJhb6mv794+wC4zhpGEnUJhD2jjsOJM+7ZuiawbnX9pZ9miKjQeGfW1ZoGsJV0z7/pUSQd8vcA==
+  </data>
+ </layer>
+ <layer id="53" name="Walls" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzt0DEKgDAMRuGQ+19ABy/g4AFc6qyLznbyIo1YsBQEt2Z4H/xzHhEBAADAl05FQrVBW1e9LmvZq00N+xa7Pec/9fr0eXJYz5b/NDrsu8WiyWNfaXXedzrvAwD8lwCmIxRf
+  </data>
+ </layer>
+ <layer id="54" name="Path_deco_overlays_1" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJztl7tKA0EUhieX3TS+gZdXUAtby3RaWCoao2CjqBCsfIAYEMRCC9EQQQUFDZuoAR8gQUyvRQJqaWWnsRDPITNkMu7Mzu5OrPzgZ1eY5Hyc48xmCflHRSpOyLxL/NBnE1K2CGlY+p/J0Bolj1oZny4y7jXdWnRdNq5Xv5d+XwrnCq270WO/b6sz22vIu48ZIw7U3woRHcTepRL+HJFdSS0T89X932OcQE4hZ/Taa5jfRIyQyZj3+hvILaTCXRkPxu26+zcHfmkXx5ZmjxvC30Hnex5p7wvcE02u9mys7Yh8+Jw7cgfZ45x0/BrW76CXbXfWvFGXVXBb05ixDHG+YfZHLUB/vBDnmxXOk7QPX5WfarYOnD/5AGcQ4nWe84h+qRBz1cWPn8i6xO9T0ksn0X3vRAl5hbxEzfgNBZyRGwVwOlZ4MXT9BsBtMIDfvvD92K/naLt3pZB+CfAZ4TJqsH+6qPz6BZ9xA/vhwqXeTkS+XtdvAdymPPzYc5YHf/eNQf0jyDRkBpKHHNLgfcGAXwbcFl38+N+kVUiNdHzy9LoJuYIsQ1YgRcglDd47Bvx0eIQ8QZLUp0iv24r6Xpj0YyRdfPA5W5esr8fl7205hd8wt3fD+uFztqn4jKn3IhXsGcz8crZ8rchf+DHE/rnNTXeO+D6Ae0783R2GXIj9IIJe7FwwxYEhPzxPq2a+qoslg/0T+QFqIYFI
+  </data>
+ </layer>
+ <layer id="55" name="Others-Buildings" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzt1EkOAUEUxvEn6U0PKxa4A2fAjbiCaW0luACdcALacALaeATTHfCJXgmJRqknef/kS60q/Us6KSKJa55BNDR0K57nwzZn7JMkSfp2bZOog7mm+m/FbaIElrRfv9OHa4B5gW+Nc6PIevWlsHQI3xSWGeYHpgPOoyJfBq4slgvhu+8E2/kH//rdohZRzNKtuFVyiLpYz9EtedwIrjE2YepbwLXEVkx9W7h22J6pT1JTHu9n4YM3VGVFuMpYBasyNNZhamBNrMXQp7taRLdA+tcuOfciFw==
+  </data>
+ </layer>
+ <layer id="56" name="corrections-1-buildings-2" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzt0r1LQmEYhvEnSPIDP6KCopqz/0pbs81srKbUoKWa0goXdapma9LmaipnayrB6MOc6goc5JCiKOd9iHPDBSp63h/yiuhcwy/y6jet6L7xgIiLdjAmKWWD9Y0z3umjj7Nmsc3REd/NUNYG3wTnuckT6P83Z7jO6cIG3zyuBVocwFfGVaFrpXfxHtcDVS2+BO83FJifMbxQvcOS5vVuuz3Dxu/f87kPYx134pjPTuiUcoZ9U7imaWaAO2vnlnCFaVmpz5kzZ/93+ZBIgYoh05K/V8J1SVdKfTe4bulOqa+G65GelPqauL6opdTnmzQt6L1V/rcYrY3g//v0DP8M6zZxbdH2CHxe7/DPsG4f1wEdGrx/kaBIlFaC5gy9Fse1TgmlviSuFKWV+jTvB31/NH8=
+  </data>
+ </layer>
+ <layer id="59" name="bridge_support" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzt0DEKACAIhWEP2QEqO0L3pyXIRYIWDf5veYIO8kQAn+4soV/4mpl72Bf/GXK6qzu72dmMMp3MRO8noTJ2BgAAAAAvFlgsBf0=
+  </data>
+ </layer>
+ <layer id="60" name="bridge" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzt0LENgDAMRFFPEEYIC7ACBQxAwXAwLkQkkrkGKlzwn3SK7DQnmwF3yWWu7yT7FNbukmUe3E7/vrTZ+/t1Z/aAjtml3W2VfUkf0E2N0QUeLNEFAAAAAOAnDmO/Bdg=
+  </data>
+ </layer>
+</map>
