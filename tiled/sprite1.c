@@ -53,34 +53,34 @@ static void sprite_draw(struct sprite *s)
 static bool collision_check(int x1, int y1, int w1, int h1,
 			int x2, int y2, int w2, int h2)
 {
-	if (x1 >= x2 && x1 <= x2 + w2 &&
-		y1 >= y2 && y1 <= y2 + h2)
+	if (x1 > x2 && x1 < x2 + w2 &&
+		y1 > y2 && y1 < y2 + h2)
 		return true;
-	else if (x1 >= x2 && x1 <= x2 + w2 &&
-			y1 + h1 >= y2 && y1 + h1 <= y2 + h2)
+	else if (x1 > x2 && x1 < x2 + w2 &&
+			y1 + h1 > y2 && y1 + h1 < y2 + h2)
 		return true;
-	else if (x1 + w1 >= x2 && x1 + w1 <= x2 + w2 &&
-			y1 >= y2 && y1 <= y2 + h2)
+	else if (x1 + w1 > x2 && x1 + w1 < x2 + w2 &&
+			y1 > y2 && y1 < y2 + h2)
 		return true;
-	else if (x1 + w1 >= x2 && x1 + w1 <= x2 + w2 &&
-			y1 + h1 >= y2 && y1 + h1 <= y2 + h2)
+	else if (x1 + w1 > x2 && x1 + w1 < x2 + w2 &&
+			y1 + h1 > y2 && y1 + h1 < y2 + h2)
 		return true;
 
 	if (w1 > w2) {
 		if (x1 < x2 && x1 + w1 > x2 + w2 &&
-			y1 + h1 >= y2 && y1 + h1 <= y2 + h2)
+			y1 + h1 > y2 && y1 + h1 < y2 + h2)
 			return true;
 		else if (x1 < x2 && x1 + w1 > x2 + w2 &&
-			y1 >= y2 && y1 <= y2 + h2)
+			y1 > y2 && y1 < y2 + h2)
 			return true;
 	}
 
 	if (h1 > h2) {
 		if (y1 < y2 && y1 + h1 > y2 + h2 &&
-			x1 + w1 >= x2 && x1 + w1 <= x2 + w2)
+			x1 + w1 > x2 && x1 + w1 < x2 + w2)
 			return true;
 		if (y1 < y2 && y1 + h1 > y2 + h2 &&
-			x1 >= x2 && x1 <= x2 + w2)
+			x1 > x2 && x1 < x2 + w2)
 			return true;
 	}
 
@@ -138,7 +138,7 @@ static void sprite_move(struct sprite *s, int step)
 			w = al_get_object_width(objs[i]);
 			h = al_get_object_height(objs[i]);
 
-			if (collision_check(s->x, s->y+s->h/2, s->w, s->h/2,
+			if (collision_check(s->x, s->y+s->h*2/3, s->w, s->h/3,
 						x, y, w, h)) {
 				s->x = old_x;
 				s->y = old_y;
@@ -166,7 +166,7 @@ int main(int argc, char **argv)
 	int map_w = 0, map_h = 0;
 
 	int move_direction = DOWN;
-	int move_step = 3;
+	int move_step = 1;
 	struct sprite s = {
 		.x = 520,
 		.y = 300,
