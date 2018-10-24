@@ -21,9 +21,10 @@ struct sprite {
 	int di; /* face direction */
 	int st; /* status */
 	ALLEGRO_BITMAP *bmp;
+	ALLEGRO_MAP	*map;
 };
 
-enum direction {
+enum DIRECTION {
 	LEFT = 1,
 	RIGHT = 2,
 	UP = 3,
@@ -47,45 +48,104 @@ static void sprite_draw(struct sprite *s)
 	//al_set_clipping_rectangle(s->x, s->y, s->w, s->h);
 	al_draw_bitmap_region(s->bmp, x, y, s->w, s->h,
 					s->x, s->y, 0);
-	//al_flip_display();
 }
 
-static void move_left(struct sprite *s, int step)
+static bool collision_check(int x1, int y1, int w1, int h1,
+			int x2, int y2, int w2, int h2)
 {
-	if (s->x >= step)
-		s->x -= step;
-	else
-		s->x = 0;
+	if (x1 >= x2 && x1 <= x2 + w2 &&
+		y1 >= y2 && y1 <= y2 + h2)
+		return true;
+	else if (x1 >= x2 && x1 <= x2 + w2 &&
+			y1 + h1 >= y2 && y1 + h1 <= y2 + h2)
+		return true;
+	else if (x1 + w1 >= x2 && x1 + w1 <= x2 + w2 &&
+			y1 >= y2 && y1 <= y2 + h2)
+		return true;
+	else if (x1 + w1 >= x2 && x1 + w1 <= x2 + w2 &&
+			y1 + h1 >= y2 && y1 + h1 <= y2 + h2)
+		return true;
 
-	sprite_draw(s);
+	if (w1 > w2) {
+		if (x1 < x2 && x1 + w1 > x2 + w2 &&
+			y1 + h1 >= y2 && y1 + h1 <= y2 + h2)
+			return true;
+		else if (x1 < x2 && x1 + w1 > x2 + w2 &&
+			y1 >= y2 && y1 <= y2 + h2)
+			return true;
+	}
+
+	if (h1 > h2) {
+		if (y1 < y2 && y1 + h1 > y2 + h2 &&
+			x1 + w1 >= x2 && x1 + w1 <= x2 + w2)
+			return true;
+		if (y1 < y2 && y1 + h1 > y2 + h2 &&
+			x1 >= x2 && x1 <= x2 + w2)
+			return true;
+	}
+
+	return false;
 }
 
-static void move_right(struct sprite *s, int step)
+static void sprite_move(struct sprite *s, int step)
 {
-	if (s->x + s->w <= BG_WIDTH - step)
-		s->x += step;
-	else
-		s->x = BG_WIDTH - s->w;
+	int old_x, old_y;
+	ALLEGRO_MAP_LAYER *layer = NULL;
+	ALLEGRO_MAP_OBJECT **objs = NULL;
 
-	sprite_draw(s);
-}
+	old_x = s->x;
+	old_y = s->y;
 
-static void move_up(struct sprite *s, int step)
-{
-	if (s->y >= step)
-		s->y -= step;
-	else
-		s->y = 0;
+	switch (s->di) {
+		case LEFT:
+			if (s->x >= step)
+				s->x -= step;
+			else
+				s->x = 0;
+			break;
+		case RIGHT:
+			if (s->x + s->w <= BG_WIDTH - step)
+				s->x += step;
+			else
+				s->x = BG_WIDTH - s->w;
+			break;
+		case UP:
+			if (s->y >= step)
+				s->y -= step;
+			else
+				s->y = 0;
+			break;
+		case DOWN:
+			if (s->y + s->h < BG_HEIGHT - step)
+				s->y += step;
+			else
+				s->y = BG_HEIGHT - s->h;
+			break;
+		default:
+			break;
+	}
 
-	sprite_draw(s);
-}
 
-static void move_down(struct sprite *s, int step)
-{
-	if (s->y + s->h < BG_HEIGHT - step)
-		s->y += step;
-	else
-		s->y = BG_HEIGHT - s->h;
+	/* check map collision */
+	layer = al_get_map_layer(s->map, "Objects Layer");
+	if (layer) {
+		int i, len = 0;
+		objs = al_get_objects(layer, &len);
+		for (i = 0; i < len; i++) {
+			int x, y, w, h;
+			x = al_get_object_x(objs[i]);
+			y = al_get_object_y(objs[i]);
+			w = al_get_object_width(objs[i]);
+			h = al_get_object_height(objs[i]);
+
+			if (collision_check(s->x, s->y+s->h/2, s->w, s->h/2,
+						x, y, w, h)) {
+				s->x = old_x;
+				s->y = old_y;
+				return;
+			}
+		}
+	}
 
 	sprite_draw(s);
 }
@@ -115,6 +175,7 @@ int main(int argc, char **argv)
 		.di = DOWN,
 		.st = 0,
 		.bmp = NULL,
+		.map = NULL,
 	};
 
 
@@ -160,6 +221,7 @@ int main(int argc, char **argv)
 	}
 	map_w = al_get_map_width(map) * al_get_tile_width(map);
 	map_h = al_get_map_height(map) * al_get_tile_height(map);
+	s.map = map;
 
 	/* Load image */
 	s.bmp = al_load_bitmap(SPRITE_TILE_FILE);
@@ -215,19 +277,19 @@ int main(int argc, char **argv)
 				al_get_keyboard_state(&key_state);
 				if (al_key_down(&key_state, ALLEGRO_KEY_RIGHT)) {
 					s.di = RIGHT;
-					move_right(&s, move_step);
+					sprite_move(&s, move_step);
 					redraw = true;
 				} else if (al_key_down(&key_state, ALLEGRO_KEY_LEFT)) {
 					s.di = LEFT;
-					move_left(&s, move_step);
+					sprite_move(&s, move_step);
 					redraw = true;
 				} else if (al_key_down(&key_state, ALLEGRO_KEY_DOWN)) {
 					s.di = DOWN;
-					move_down(&s, move_step);
+					sprite_move(&s, move_step);
 					redraw = true;
 				} else if (al_key_down(&key_state, ALLEGRO_KEY_UP)) {
 					s.di = UP;
-					move_up(&s, move_step);
+					sprite_move(&s, move_step);
 					redraw = true;
 				}
 				break;
