@@ -93,9 +93,9 @@ static void al_dump_sprite(ALLEGRO_SPRITE *s)
 		printf("\t\tWidth:  %4d\n", s->layers[i].image_width);
 		printf("\t\tHeight: %4d\n", s->layers[i].image_height);
 		for (j = 0; j < s->layers[i].tileset_count; j++) {
-			printf("\tTileset %d: %d tiles\n", j+1, s->layers[i].tilesets[i].tile_count);
-			printf("\t\tTile width:  %4d\n", s->layers[i].tilesets[i].tile_width);
-			printf("\t\tTile height: %4d\n", s->layers[i].tilesets[i].tile_height);
+			printf("\tTileset %d: %d tiles\n", j+1, s->layers[i].tilesets[j].tile_count);
+			printf("\t\tTile width:  %4d\n", s->layers[i].tilesets[j].tile_width);
+			printf("\t\tTile height: %4d\n", s->layers[i].tilesets[j].tile_height);
 			for (t = 0; t < s->layers[i].tilesets[j].tile_count; t++) {
 				printf("\t\t%02d: %4d, %4d\n", t+1,
 						s->layers[i].tilesets[j].tiles[t].x,
@@ -541,9 +541,9 @@ int al_draw_sprite(ALLEGRO_SPRITE *s)
 		return -1;
 
 	tileset_id = s->action->tileset_id;
-	tile_id = s->action->counter % (s->layers[i].tilesets[tileset_id].tile_count / 4);
 
 	for (i = 0; i < s->layer_count; i++) {
+		tile_id = s->action->counter % (s->layers[i].tilesets[tileset_id].tile_count / 4);
 		tile_id += s->face_to * s->layers[i].tilesets[tileset_id].tile_count / 4;
 
 		al_draw_bitmap_region(s->layers[i].bitmap,

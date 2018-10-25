@@ -105,6 +105,7 @@ int main(int argc, char **argv)
 				al_clear_to_color(BG_COLOR);
 				al_draw_sprite(sprite);
 				al_flip_display();
+				redraw = false;
 			}
 			continue;
 		}
