@@ -11,6 +11,11 @@
 #define BG_HEIGHT		480
 #define BG_COLOR	(al_map_rgb(0, 0, 0))
 
+#define STAY	0
+#define WALK	1
+#define JUMP	2
+#define ATTACK	3
+
 int main(int argc, char **argv)
 {
 	ALLEGRO_DISPLAY *display = NULL;
@@ -53,8 +58,16 @@ int main(int argc, char **argv)
 		fprintf(stderr, "failed to load sprite "SPRITE_FILE"!\n");
 		return -1;
 	}
+
 	al_sprite_set_map_size(sprite, BG_WIDTH, BG_HEIGHT);
 	al_sprite_set_position(sprite, BG_WIDTH/2, BG_HEIGHT/2);
+
+	al_sprite_add_action(sprite, STAY, 0);
+	al_sprite_add_action(sprite, WALK, 1);
+	al_sprite_add_action(sprite, JUMP, 2);
+	al_sprite_add_action(sprite, ATTACK, 4);
+
+	al_sprite_start_action(sprite, STAY);
 	al_sprite_turn_left(sprite);
 
 	/* Create timer, 60fps */
@@ -89,14 +102,6 @@ int main(int argc, char **argv)
 
 		if (al_is_event_queue_empty(eventq)) {
 			if (redraw) {
-				if (al_sprite_is_attacking(sprite))
-					al_sprite_select_tileset(sprite, 4);
-				else if (al_sprite_is_jumping(sprite))
-					al_sprite_select_tileset(sprite, 2);
-				else if (al_sprite_is_moving(sprite))
-					al_sprite_select_tileset(sprite, 1);
-				else
-					al_sprite_select_tileset(sprite, 0);
 				al_clear_to_color(BG_COLOR);
 				al_draw_sprite(sprite);
 				al_flip_display();
@@ -107,41 +112,103 @@ int main(int argc, char **argv)
 		al_wait_for_event(eventq, &event);
 		switch (event.type) {
 			case ALLEGRO_EVENT_TIMER:
-				al_get_keyboard_state(&key_state);
-				if (al_key_down(&key_state, ALLEGRO_KEY_RIGHT) ||
-					al_key_down(&key_state, ALLEGRO_KEY_LEFT) ||
-					al_key_down(&key_state, ALLEGRO_KEY_DOWN) ||
-					al_key_down(&key_state, ALLEGRO_KEY_UP)) {
-					al_sprite_move(sprite, 2);
-					redraw = true;
-				}
 				if (event.timer.count % 10 == 0) {
-					al_sprite_update_animation(sprite);
-					redraw = true;
+					if (al_sprite_action_running(sprite)) {
+						al_sprite_update_action(sprite);
+						redraw = true;
+
+						if (al_sprite_action_id(sprite) == WALK) {
+							switch (al_sprite_face_direction(sprite)) {
+								case ALLEGRO_SPRITE_FACE_DOWN:
+									al_sprite_move(sprite, 0, 4);
+									break;
+								case ALLEGRO_SPRITE_FACE_UP:
+									al_sprite_move(sprite, 0, -4);
+									break;
+								case ALLEGRO_SPRITE_FACE_RIGHT:
+									al_sprite_move(sprite, 4, 0);
+									break;
+								case ALLEGRO_SPRITE_FACE_LEFT:
+									al_sprite_move(sprite, -4, 0);
+									break;
+								default:
+									break;
+							}
+						} else if (al_sprite_action_id(sprite) == JUMP) {
+							int c = al_sprite_action_counter(sprite);
+							switch (c) {
+								case 1:
+									al_sprite_move(sprite, 0, -8);
+									break;
+								case 2:
+									al_sprite_move(sprite, 0, -8);
+									break;
+								case 3:
+									al_sprite_move(sprite, 0, 8);
+									break;
+								case 4:
+									al_sprite_move(sprite, 0, 8);
+									break;
+								default:
+									al_sprite_stop_action(sprite);
+									al_sprite_start_action(sprite, STAY);
+									break;
+							}
+						} else if (al_sprite_action_id(sprite) == ATTACK) {
+							int c = al_sprite_action_counter(sprite);
+							if (c > 4) {
+								al_sprite_stop_action(sprite);
+								al_sprite_start_action(sprite, STAY);
+							}
+						}
+					}
 				}
 				break;
 			case ALLEGRO_EVENT_KEY_DOWN:
-				if (event.keyboard.keycode == ALLEGRO_KEY_SPACE)
-					al_sprite_jump(sprite);
-				else if (event.keyboard.keycode == ALLEGRO_KEY_DOWN)
-					al_sprite_turn_down(sprite);
-				else if (event.keyboard.keycode == ALLEGRO_KEY_UP)
-					al_sprite_turn_up(sprite);
-				else if (event.keyboard.keycode == ALLEGRO_KEY_RIGHT)
-					al_sprite_turn_right(sprite);
-				else if (event.keyboard.keycode == ALLEGRO_KEY_LEFT)
-					al_sprite_turn_left(sprite);
+				if (event.keyboard.keycode == ALLEGRO_KEY_SPACE) {
+					al_sprite_start_action(sprite, JUMP);
+					redraw = true;
+				}
+				else if (event.keyboard.keycode == ALLEGRO_KEY_A) {
+					al_sprite_start_action(sprite, ATTACK);
+					redraw = true;
+				}
+				else if (event.keyboard.keycode == ALLEGRO_KEY_DOWN ||
+						event.keyboard.keycode == ALLEGRO_KEY_UP ||
+						event.keyboard.keycode == ALLEGRO_KEY_RIGHT ||
+						event.keyboard.keycode == ALLEGRO_KEY_LEFT) {
+
+					al_sprite_start_action(sprite, WALK);
+					redraw = true;
+
+					switch (event.keyboard.keycode) {
+						case ALLEGRO_KEY_DOWN:
+							al_sprite_turn_down(sprite);
+							break;
+						case ALLEGRO_KEY_UP:
+							al_sprite_turn_up(sprite);
+							break;
+						case ALLEGRO_KEY_RIGHT:
+							al_sprite_turn_right(sprite);
+							break;
+						case ALLEGRO_KEY_LEFT:
+							al_sprite_turn_left(sprite);
+							break;
+						default:
+							break;
+					}
+				}
 				break;
 			case ALLEGRO_EVENT_KEY_UP:
 				if (event.keyboard.keycode == ALLEGRO_KEY_DOWN ||
-					event.keyboard.keycode == ALLEGRO_KEY_UP ||
-					event.keyboard.keycode == ALLEGRO_KEY_RIGHT ||
-					event.keyboard.keycode == ALLEGRO_KEY_LEFT) {
-					al_sprite_move_stop(sprite);
+						event.keyboard.keycode == ALLEGRO_KEY_UP ||
+						event.keyboard.keycode == ALLEGRO_KEY_RIGHT ||
+						event.keyboard.keycode == ALLEGRO_KEY_LEFT) {
+
+					al_sprite_stop_action(sprite);
+					al_sprite_start_action(sprite, STAY);
 					redraw = true;
 				}
-				if (event.keyboard.keycode == ALLEGRO_KEY_SPACE)
-					al_sprite_jump_stop(sprite);
 				break;
 			case ALLEGRO_EVENT_KEY_CHAR:
 				if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)

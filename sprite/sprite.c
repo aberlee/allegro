@@ -46,6 +46,16 @@ typedef enum {
 	ALLEGRO_SPRITE_FACE_LEFT = 3,
 } ALLEGRO_SPRITE_FACE_DIRECTION;
 
+typedef struct {
+	int id;
+	int running;
+
+	int tileset_id;
+	int counter;
+} ALLEGRO_SPRITE_ACTION;
+
+#define MAX_ACTIONS	10
+
 struct _ALLEGRO_SPRITE {
 	int x;
 	int y;
@@ -55,16 +65,14 @@ struct _ALLEGRO_SPRITE {
 	int map_width;
 	int map_height;
 
-	ALLEGRO_SPRITE_FACE_DIRECTION faceto;
-	int moving;
-	int attacking;
-	int jumping;
+	ALLEGRO_SPRITE_FACE_DIRECTION face_to;
+
+	int action_count;
+	ALLEGRO_SPRITE_ACTION actions[MAX_ACTIONS];
+	ALLEGRO_SPRITE_ACTION *action; /* pointer to selected action */
 
 	int layer_count;
 	ALLEGRO_SPRITE_LAYER *layers;
-
-	int selected_tileset_id;
-	int animation_counter;
 };
 
 typedef struct _ALLEGRO_SPRITE ALLEGRO_SPRITE;
@@ -384,17 +392,6 @@ ALLEGRO_SPRITE *al_load_sprite(const char *file_name)
 /********** Sprite Status Update *******************************************************/
 /***************************************************************************************/
 
-int al_sprite_select_tileset(ALLEGRO_SPRITE *s, int id)
-{
-	if (id < 0 || id > s->layers[0].tileset_count)
-		return -1;
-
-	s->selected_tileset_id = id;
-	s->w = s->layers[0].tilesets[id].tile_width;
-	s->h = s->layers[0].tilesets[id].tile_height;
-	return 0;
-}
-
 void al_sprite_set_map_size(ALLEGRO_SPRITE *s, int map_w, int map_h)
 {
 	s->map_width = map_w;
@@ -419,144 +416,116 @@ int al_sprite_get_y(ALLEGRO_SPRITE *s)
 
 void al_sprite_turn_down(ALLEGRO_SPRITE *s)
 {
-	s->faceto = ALLEGRO_SPRITE_FACE_DOWN;
+	s->face_to = ALLEGRO_SPRITE_FACE_DOWN;
 }
 
 void al_sprite_turn_up(ALLEGRO_SPRITE *s)
 {
-	s->faceto = ALLEGRO_SPRITE_FACE_UP;
+	s->face_to = ALLEGRO_SPRITE_FACE_UP;
 }
 
 void al_sprite_turn_right(ALLEGRO_SPRITE *s)
 {
-	s->faceto = ALLEGRO_SPRITE_FACE_RIGHT;
+	s->face_to = ALLEGRO_SPRITE_FACE_RIGHT;
 }
 
 void al_sprite_turn_left(ALLEGRO_SPRITE *s)
 {
-	s->faceto = ALLEGRO_SPRITE_FACE_LEFT;
+	s->face_to = ALLEGRO_SPRITE_FACE_LEFT;
 }
 
-void al_sprite_move(ALLEGRO_SPRITE *s, int step)
+int al_sprite_face_direction(ALLEGRO_SPRITE *s)
 {
-	s->moving++;
-
-	switch (s->faceto) {
-		case ALLEGRO_SPRITE_FACE_DOWN:
-			if (s->y + s->h < s->map_height - step)
-				s->y += step;
-			else
-				s->y = s->map_height - s->h;
-			break;
-		case ALLEGRO_SPRITE_FACE_UP:
-			if (s->y >= step)
-				s->y -= step;
-			else
-				s->y = 0;
-			break;
-		case ALLEGRO_SPRITE_FACE_RIGHT:
-			if (s->x + s->w < s->map_width - step)
-				s->x += step;
-			else
-				s->x = s->map_width - s->w;
-			break;
-		case ALLEGRO_SPRITE_FACE_LEFT:
-			if (s->x >= step)
-				s->x -= step;
-			else
-				s->x = 0;
-			break;
-		default:
-			break;
-	}
+	return s->face_to;
 }
 
-void al_sprite_move_stop(ALLEGRO_SPRITE *s)
+void al_sprite_move(ALLEGRO_SPRITE *s, int step_x, int step_y)
 {
-	s->moving--;
-	if (s->moving < 0)
-		s->moving = 0;
+	int x = s->x + step_x;
+	int y = s->y + step_y;
+
+	if (y + s->h > s->map_height)
+		y = s->map_height - s->h;
+	if (y < 0)
+		y = 0;
+
+	if (x + s->w > s->map_width)
+		x = s->map_width - s->w;
+	if (x < 0)
+		x = 0;
+
+	s->x = x;
+	s->y = y;
 }
 
-void al_sprite_jump(ALLEGRO_SPRITE *s)
+int al_sprite_add_action(ALLEGRO_SPRITE *s, int id, int tileset_id)
 {
-	int step = s->h/2;
-	s->jumping++;
+	int idx = s->action_count;
+	if (idx >= MAX_ACTIONS)
+		return -1;
 
-	switch (s->faceto) {
-		case ALLEGRO_SPRITE_FACE_DOWN:
-			if (s->y + s->h < s->map_height - step)
-				s->y += step;
-			else
-				s->y = s->map_height - s->h;
-			break;
-		case ALLEGRO_SPRITE_FACE_UP:
-			if (s->y >= step)
-				s->y -= step;
-			else
-				s->y = 0;
-			break;
-		case ALLEGRO_SPRITE_FACE_RIGHT:
-		case ALLEGRO_SPRITE_FACE_LEFT:
-			s->y -= step;
-			break;
-		default:
-			break;
-	}
+	s->actions[idx].id = id;
+	s->actions[idx].running = 0;
+	s->actions[idx].tileset_id = tileset_id;
+	s->actions[idx].counter = 0;
+	s->action_count++;
+	return 0;
 }
 
-void al_sprite_jump_stop(ALLEGRO_SPRITE *s)
+int al_sprite_start_action(ALLEGRO_SPRITE *s, int id)
 {
-	int step = s->h/2;
+	if (id < 0 || id > s->action_count)
+		return -1;
 
-	s->jumping--;
-	if (s->jumping < 0)
-		s->jumping = 0;
+	s->action = &s->actions[id];
+	s->w = s->layers[0].tilesets[s->action->tileset_id].tile_width;
+	s->h = s->layers[0].tilesets[s->action->tileset_id].tile_height;
 
-	switch (s->faceto) {
-		case ALLEGRO_SPRITE_FACE_RIGHT:
-		case ALLEGRO_SPRITE_FACE_LEFT:
-			s->y += step;
-			break;
-		default:
-			break;
-	}
+	s->action->running++;
+	s->action->counter = 0;
+	return 0;
 }
 
-void al_sprite_attack(ALLEGRO_SPRITE *s)
+void al_sprite_update_action(ALLEGRO_SPRITE *s)
 {
-	s->attacking++;
+	if (!s->action)
+		return;
+	if (!s->action->running)
+		return;
+
+	s->action->counter++;
+	if (s->action->counter >= 2520)
+		s->action->counter = 0;
 }
 
-void al_sprite_attack_stop(ALLEGRO_SPRITE *s)
+void al_sprite_stop_action(ALLEGRO_SPRITE *s)
 {
-	s->attacking--;
-	if (s->attacking < 0)
-		s->attacking = 0;
+	if (!s->action)
+		return;
+	s->action->running = 0;
+	s->action->counter = 0;
 }
 
-void al_sprite_update_animation(ALLEGRO_SPRITE *s)
+int al_sprite_action_running(ALLEGRO_SPRITE *s)
 {
-	s->animation_counter++;
-	if (s->animation_counter >= 2520)
-		s->animation_counter = 0;
+	if (!s->action)
+		return 0;
+	return s->action->running;
 }
 
-int al_sprite_is_jumping(ALLEGRO_SPRITE *s)
+int al_sprite_action_id(ALLEGRO_SPRITE *s)
 {
-	return s->jumping;
+	if (!s->action)
+		return -1;
+	return s->action->id;
 }
 
-int al_sprite_is_moving(ALLEGRO_SPRITE *s)
+int al_sprite_action_counter(ALLEGRO_SPRITE *s)
 {
-	return s->moving;
+	if (!s->action)
+		return -1;
+	return s->action->counter;
 }
-
-int al_sprite_is_attacking(ALLEGRO_SPRITE *s)
-{
-	return s->attacking;
-}
-
 
 /***************************************************************************************/
 /********** Sprite Draw ****************************************************************/
@@ -565,12 +534,17 @@ int al_sprite_is_attacking(ALLEGRO_SPRITE *s)
 int al_draw_sprite(ALLEGRO_SPRITE *s)
 {
 	int i;
-	int tileset_id = s->selected_tileset_id;
+	int tileset_id;
 	int tile_id;
 
+	if (!s->action)
+		return -1;
+
+	tileset_id = s->action->tileset_id;
+	tile_id = s->action->counter % (s->layers[i].tilesets[tileset_id].tile_count / 4);
+
 	for (i = 0; i < s->layer_count; i++) {
-		tile_id = s->animation_counter % (s->layers[i].tilesets[tileset_id].tile_count / 4);
-		tile_id += s->faceto * s->layers[i].tilesets[tileset_id].tile_count / 4;
+		tile_id += s->face_to * s->layers[i].tilesets[tileset_id].tile_count / 4;
 
 		al_draw_bitmap_region(s->layers[i].bitmap,
 				s->layers[i].tilesets[tileset_id].tiles[tile_id].x,
