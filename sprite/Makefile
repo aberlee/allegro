@@ -3,7 +3,7 @@ CFLAGS =
 LDFLAGS = -lm -lallegro -lallegro_image -lallegro_font \
 		  -lallegro_ttf -lallegro_primitives -lallegro_tiled \
 		  -lcjson -lcjson_utils 
-APPS = basic_test
+APPS = basic_test game_frame
 
 all: $(APPS)
 
