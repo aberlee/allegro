@@ -2,12 +2,12 @@ CC = gcc
 CFLAGS =
 LDFLAGS = -lm -lallegro -lallegro_image -lallegro_font \
 		  -lallegro_ttf -lallegro_primitives -lallegro_tiled \
-		  -lcjson -lcjson_utils -ljson-c
-APPS = cjson_parse json-c_parse sprite_parse
+		  -lcjson -lcjson_utils 
+APPS = basic_test
 
 all: $(APPS)
 
-%.o: %.c
+%.o: %.c sprite.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(APPS): % : %.o
