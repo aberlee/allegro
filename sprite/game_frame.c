@@ -27,6 +27,127 @@ static ALLEGRO_TIMER *timer = NULL;
 static ALLEGRO_SPRITE *sprite = NULL;
 static bool running = true;
 static bool redraw = true;
+static int npc_count = 4;
+static ALLEGRO_SPRITE *npc[4] = {NULL, NULL, NULL, NULL};
+
+
+static bool collision_check(int x1, int y1, int w1, int h1,
+			int x2, int y2, int w2, int h2)
+{
+	if (x1 >= x2 && x1 <= x2 + w2 &&
+		y1 >= y2 && y1 <= y2 + h2)
+		return true;
+	else if (x1 >= x2 && x1 <= x2 + w2 &&
+			y1 + h1 >= y2 && y1 + h1 <= y2 + h2)
+		return true;
+	else if (x1 + w1 >= x2 && x1 + w1 <= x2 + w2 &&
+			y1 >= y2 && y1 <= y2 + h2)
+		return true;
+	else if (x1 + w1 >= x2 && x1 + w1 <= x2 + w2 &&
+			y1 + h1 >= y2 && y1 + h1 <= y2 + h2)
+		return true;
+
+	if (w1 > w2) {
+		if (x1 <= x2 && x1 + w1 >= x2 + w2 &&
+			y1 + h1 > y2 && y1 + h1 < y2 + h2)
+			return true;
+		else if (x1 <= x2 && x1 + w1 >= x2 + w2 &&
+			y1 > y2 && y1 < y2 + h2)
+			return true;
+	}
+
+	if (h1 > h2) {
+		if (y1 <= y2 && y1 + h1 >= y2 + h2 &&
+			x1 + w1 > x2 && x1 + w1 < x2 + w2)
+			return true;
+		if (y1 <= y2 && y1 + h1 >= y2 + h2 &&
+			x1 > x2 && x1 < x2 + w2)
+			return true;
+	}
+
+	return false;
+}
+
+static bool game_collision_check(int step_x, int step_y)
+{
+	int i;
+	bool yes;
+	int x1, y1, w1, h1;
+	int x2, y2, w2, h2;
+
+	if (!sprite || npc_count <= 0)
+		return false;
+
+	x1 = al_sprite_get_x(sprite) + step_x;
+	y1 = al_sprite_get_y(sprite) + step_y;
+	w1 = al_sprite_get_width(sprite);
+	h1 = al_sprite_get_height(sprite)/2;
+
+	for (i = 0; i < npc_count; i++) {
+		x2 = al_sprite_get_x(npc[i]);
+		y2 = al_sprite_get_y(npc[i]);
+		w2 = al_sprite_get_width(npc[i]);
+		h2 = al_sprite_get_height(npc[i])/2;
+
+		yes = collision_check(x1, y1, w1, h1, x2, y2, w2, h2);
+		if (yes) {
+			printf("Collision! NPC %d\n", i);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static bool game_attack_check(void)
+{
+	int i;
+	bool yes;
+	int x1, y1, w1, h1;
+	int x2, y2, w2, h2;
+	int step_x = 0;
+	int step_y = 0;
+
+	if (!sprite || npc_count <= 0)
+		return false;
+
+	switch (al_sprite_get_direction(sprite)) {
+		case ALLEGRO_SPRITE_DOWN:
+			step_y = 6;
+			break;
+		case ALLEGRO_SPRITE_UP:
+			step_y = -6;
+			break;
+		case ALLEGRO_SPRITE_RIGHT:
+			step_x = 4;
+			break;
+		case ALLEGRO_SPRITE_LEFT:
+			step_x = -4;
+			break;
+		default:
+			break;
+	}
+
+	x1 = al_sprite_get_x(sprite) + step_x;
+	y1 = al_sprite_get_y(sprite) + step_y;
+	w1 = al_sprite_get_width(sprite);
+	h1 = al_sprite_get_height(sprite)/2;
+
+	for (i = 0; i < npc_count; i++) {
+		x2 = al_sprite_get_x(npc[i]);
+		y2 = al_sprite_get_y(npc[i]);
+		w2 = al_sprite_get_width(npc[i]);
+		h2 = al_sprite_get_height(npc[i])/2;
+
+		yes = collision_check(x1, y1, w1, h1, x2, y2, w2, h2);
+		if (yes) {
+			printf("ATTACK! NPC %d\n", i);
+			return true;
+		}
+	}
+
+	return false;
+}
 
 static int game_init_map(void)
 {
@@ -42,7 +163,7 @@ static int game_init_sprite(void)
 	}
 
 	al_sprite_set_map_size(sprite, BG_WIDTH, BG_HEIGHT);
-	al_sprite_move_to(sprite, BG_WIDTH/2, BG_HEIGHT/2);
+	al_sprite_move_to(sprite, 320, 240);
 
 	al_sprite_add_action(sprite, STAY, 0, 2, 20, true);
 	al_sprite_add_action(sprite, WALK, 1, 4, 10, true);
@@ -52,6 +173,35 @@ static int game_init_sprite(void)
 
 	al_sprite_start_action(sprite, STAY);
 	al_sprite_set_direction(sprite, ALLEGRO_SPRITE_LEFT);
+	return 0;
+}
+
+static int game_init_npc(void)
+{
+	int i;
+	for (i = 0; i < npc_count; i++) {
+		npc[i] = al_load_sprite(SPRITE_FILE);
+		if (!npc[i]) {
+			fprintf(stderr, "failed to load sprite "SPRITE_FILE"!\n");
+			return -1;
+		}
+
+		al_sprite_set_map_size(npc[i], BG_WIDTH, BG_HEIGHT);
+		al_sprite_add_action(npc[i], STAY, 0, 2, 20, true);
+		al_sprite_start_action(npc[i], STAY);
+	}
+
+	al_sprite_set_direction(npc[0], ALLEGRO_SPRITE_RIGHT);
+	al_sprite_move_to(npc[0], 220, 240);
+
+	al_sprite_set_direction(npc[1], ALLEGRO_SPRITE_LEFT);
+	al_sprite_move_to(npc[1], 420, 240);
+
+	al_sprite_set_direction(npc[2], ALLEGRO_SPRITE_DOWN);
+	al_sprite_move_to(npc[2], 320, 140);
+
+	al_sprite_set_direction(npc[3], ALLEGRO_SPRITE_UP);
+	al_sprite_move_to(npc[3], 320, 340);
 	return 0;
 }
 
@@ -101,6 +251,11 @@ static int game_init(void)
 		return -1;
 	}
 
+	if (game_init_npc()) {
+		fprintf(stderr, "failed to init sprite!\n");
+		return -1;
+	}
+
 	/* Set window title */
 	al_set_window_title(display, "SPRITE!");
 
@@ -121,6 +276,13 @@ static void game_exit(void)
 		al_destroy_timer(timer);
 	if (sprite)
 		al_destroy_sprite(sprite);
+	if (npc_count > 0) {
+		int i;
+		for (i = 0; i < npc_count; i++) {
+			if (npc[i])
+				al_destroy_sprite(npc[i]);
+		}
+	}
 	if (eventq)
 		al_destroy_event_queue(eventq);
 
@@ -181,7 +343,8 @@ static void game_handle_walk_action(ALLEGRO_EVENT *event)
 			break;
 	}
 
-	al_sprite_move_step(sprite, step_x, step_y);
+	if (!game_collision_check(step_x, step_y))
+		al_sprite_move_step(sprite, step_x, step_y);
 }
 
 static void game_handle_jump_action(ALLEGRO_EVENT *event)
@@ -206,6 +369,11 @@ static void game_handle_jump_action(ALLEGRO_EVENT *event)
 	counter = al_sprite_action_counter(sprite);
 	counter_max = al_sprite_action_counter_max(sprite);
 
+	if (counter > counter_max) {
+		al_sprite_start_action(sprite, STAY);
+		return;
+	}
+
 	if (game_check_arrow_key_down(&key_state)){
 		if (al_key_down(&key_state, ALLEGRO_KEY_LEFT))
 			step_x = -4;
@@ -223,12 +391,14 @@ static void game_handle_jump_action(ALLEGRO_EVENT *event)
 		al_sprite_action_set_counter(sprite, counter);
 	}
 
+
 	if (counter <= counter_max/2)
-		al_sprite_move_step(sprite, step_x, step_y-8);
+		step_y -= 8;
 	else if (counter <= counter_max)
-		al_sprite_move_step(sprite, step_x, step_y+8);
-	else
-		al_sprite_start_action(sprite, STAY);
+		step_y += 8;
+
+	if (!game_collision_check(step_x, 0))
+		al_sprite_move_step(sprite, step_x, step_y);
 }
 
 static void game_handle_jump_attack_action(ALLEGRO_EVENT *event)
@@ -253,6 +423,12 @@ static void game_handle_jump_attack_action(ALLEGRO_EVENT *event)
 	counter = al_sprite_action_counter(sprite);
 	counter_max = al_sprite_action_counter_max(sprite);
 
+	if (counter > counter_max) {
+		game_attack_check();
+		al_sprite_start_action(sprite, STAY);
+		return;
+	}
+
 	if (game_check_arrow_key_down(&key_state)){
 		if (al_key_down(&key_state, ALLEGRO_KEY_LEFT))
 			step_x = -4;
@@ -265,11 +441,12 @@ static void game_handle_jump_attack_action(ALLEGRO_EVENT *event)
 	}
 
 	if (counter <= counter_max/2)
-		al_sprite_move_step(sprite, step_x, step_y-8);
+		step_y -= 8;
 	else if (counter <= counter_max)
-		al_sprite_move_step(sprite, step_x, step_y+8);
-	else
-		al_sprite_start_action(sprite, STAY);
+		step_y += 8;
+
+	if (!game_collision_check(step_x, 0))
+		al_sprite_move_step(sprite, step_x, step_y);
 }
 
 static void game_handle_attack_action(ALLEGRO_EVENT *event)
@@ -294,6 +471,12 @@ static void game_handle_attack_action(ALLEGRO_EVENT *event)
 	counter = al_sprite_action_counter(sprite);
 	counter_max = al_sprite_action_counter_max(sprite);
 
+	if (counter > counter_max) {
+		game_attack_check();
+		al_sprite_start_action(sprite, STAY);
+		return;
+	}
+
 	if (game_check_arrow_key_down(&key_state)){
 		if (al_key_down(&key_state, ALLEGRO_KEY_LEFT))
 			step_x = -4;
@@ -305,10 +488,10 @@ static void game_handle_attack_action(ALLEGRO_EVENT *event)
 			step_y = 4;
 	}
 
-	if (counter > counter_max)
-		al_sprite_start_action(sprite, STAY);
-	else if (step_x != 0 || step_y != 0)
-		al_sprite_move_step(sprite, step_x, step_y);
+	if (step_x != 0 || step_y != 0) {
+		if (!game_collision_check(step_x, step_y))
+			al_sprite_move_step(sprite, step_x, step_y);
+	}
 }
 
 static void game_handle_timer_event(ALLEGRO_EVENT *event)
@@ -423,10 +606,19 @@ static int game_draw_sprite(void)
 	return 0;
 }
 
+static int game_draw_npc(void)
+{
+	int i;
+	for (i = 0; i < npc_count; i++)
+		al_draw_sprite(npc[i]);
+	return 0;
+}
+
 static int game_display_refresh(void)
 {
 	al_clear_to_color(BG_COLOR);
 	game_draw_map();
+	game_draw_npc();
 	game_draw_sprite();
 	al_flip_display();
 	redraw = false;
