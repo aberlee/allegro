@@ -18,6 +18,12 @@ typedef struct {
 } ALLEGRO_SPRITE_TILE;
 
 typedef struct {
+	/* bitmap resource */
+	char *image_file;
+	int image_width;
+	int image_height;
+	ALLEGRO_BITMAP *bitmap;
+
 	int tile_count;
 	int tile_width;
 	int tile_height;
@@ -27,19 +33,12 @@ typedef struct {
 	ALLEGRO_SPRITE_TILE *tiles_up;    /* pointer to tiles[tile_count * 1 / 4] */
 	ALLEGRO_SPRITE_TILE *tiles_right; /* pointer to tiles[tile_count * 2 / 4] */
 	ALLEGRO_SPRITE_TILE *tiles_left;  /*/pointer to tiles[tile_count * 3 / 4] */
-} ALLEGRO_SPRITE_TILESET;
+} ALLEGRO_SPRITE_TILE_LAYER;
 
 typedef struct {
-	/* bitmap resource */
-	char *image_file;
-	int image_width;
-	int image_height;
-	ALLEGRO_BITMAP *bitmap;
-
-	/* tilesets */
-	int tileset_count;
-	ALLEGRO_SPRITE_TILESET *tilesets;
-} ALLEGRO_SPRITE_BITMAP_LAYER;
+	int layer_count;
+	ALLEGRO_SPRITE_TILE_LAYER *layers;
+} ALLEGRO_SPRITE_TILESET;
 
 typedef struct {
 	int id; /* Action ID */
@@ -57,9 +56,9 @@ typedef struct {
 #define MAX_ACTIONS	10
 
 struct _ALLEGRO_SPRITE {
-	/* Bitmap layers */
-	ALLEGRO_SPRITE_BITMAP_LAYER *layers;
-	int layer_count;
+	/* Bitmap tilesets */
+	int tileset_count;
+	ALLEGRO_SPRITE_TILESET *tilesets;
 
 	/* The size of map that sprite is in */
 	int map_width;
@@ -88,22 +87,22 @@ void al_dump_sprite(ALLEGRO_SPRITE *s)
 	if (!s)
 		return;
 
-	printf("Sprite: pos (%d, %d), %d layers.\n", s->x, s->y, s->layer_count);
+	printf("Sprite: pos (%d, %d), %d tilesets.\n", s->x, s->y, s->tileset_count);
 
-	for (i = 0; i < s->layer_count; i++) {
-		printf("Layer %d: %d tilesets\n", i+1, s->layers[i].tileset_count);
-		printf("\tImage:\n");
-		printf("\t\tFile: %s\n", s->layers[i].image_file);
-		printf("\t\tWidth:  %4d\n", s->layers[i].image_width);
-		printf("\t\tHeight: %4d\n", s->layers[i].image_height);
-		for (j = 0; j < s->layers[i].tileset_count; j++) {
-			printf("\tTileset %d: %d tiles\n", j+1, s->layers[i].tilesets[j].tile_count);
-			printf("\t\tTile width:  %4d\n", s->layers[i].tilesets[j].tile_width);
-			printf("\t\tTile height: %4d\n", s->layers[i].tilesets[j].tile_height);
-			for (t = 0; t < s->layers[i].tilesets[j].tile_count; t++) {
-				printf("\t\t%02d: %4d, %4d\n", t+1,
-						s->layers[i].tilesets[j].tiles[t].x,
-						s->layers[i].tilesets[j].tiles[t].y);
+	for (i = 0; i < s->tileset_count; i++) {
+		printf("\nTileset %2d: %d layers\n", i+1, s->tilesets[i].layer_count);
+		for (j = 0; j < s->tilesets[i].layer_count; j++) {
+			printf("\tLayer %2d: %d tiles\n", j+1, s->tilesets[i].layers[j].tile_count);
+			printf("\t\tImage file:   %s\n", s->tilesets[i].layers[j].image_file);
+			printf("\t\tImage Width:  %4d\n", s->tilesets[i].layers[j].image_width);
+			printf("\t\tImage Height: %4d\n", s->tilesets[i].layers[j].image_height);
+			printf("\t\tTile width:   %4d\n", s->tilesets[i].layers[j].tile_width);
+			printf("\t\tTile height:  %4d\n", s->tilesets[i].layers[j].tile_height);
+			printf("\t\tTile %2d:\n", j+1);
+			for (t = 0; t < s->tilesets[i].layers[j].tile_count; t++) {
+				printf("\t\t\t\t%02d: %4d, %4d\n", t+1,
+						s->tilesets[i].layers[j].tiles[t].x,
+						s->tilesets[i].layers[j].tiles[t].y);
 			}
 		}
 	}
@@ -114,26 +113,27 @@ int al_destroy_sprite(ALLEGRO_SPRITE *s)
 {
 	int i, j;
 
-	if (!s->layers)
+	if (!s->tilesets)
 		return 0;
 
-	for (i = 0; i < s->layer_count; i++) {
-		if (s->layers[i].image_file)
-			free(s->layers[i].image_file);
+	for (i = 0; i < s->tileset_count; i++) {
+		if (!s->tilesets[i].layers)
+			continue;
 
-		if (s->layers[i].bitmap)
-			al_destroy_bitmap(s->layers[i].bitmap);
+		for (j = 0; j < s->tilesets[i].layer_count; j++) {
+			if (s->tilesets[i].layers[j].image_file)
+				free(s->tilesets[i].layers[j].image_file);
 
-		if (s->layers[i].tilesets) {
-			for (j = 0; j < s->layers[i].tileset_count; j++) {
-				if (s->layers[i].tilesets[j].tiles)
-					free(s->layers[i].tilesets[j].tiles);
-			}
-			free(s->layers[i].tilesets);
+			if (s->tilesets[i].layers[j].bitmap)
+				al_destroy_bitmap(s->tilesets[i].layers[j].bitmap);
+
+			if (s->tilesets[i].layers[j].tiles)
+				free(s->tilesets[i].layers[j].tiles);
 		}
+		free(s->tilesets[i].layers);
 	}
 
-	free(s->layers);
+	free(s->tilesets);
 	free(s);
 	return 0;
 }
@@ -172,80 +172,12 @@ static int al_parse_sprite_tiles(ALLEGRO_SPRITE_TILE *tiles, cJSON *obj)
 	return 0;
 }
 
-static int al_parse_sprite_tileset(ALLEGRO_SPRITE_TILESET *tileset, cJSON *obj)
+static int al_parse_sprite_layer(ALLEGRO_SPRITE_TILE_LAYER *layer, cJSON *obj)
 {
-	cJSON *item_s, *item_t;
+	cJSON *item, *item_s, *item_t;
 	int w, h, c;
 
-	/* Parse tile count */
-	item_s = cJSON_GetObjectItem(obj, "count");
-	if (!item_s || !cJSON_IsNumber(item_s))
-		ERROR_RETURN(-1);
-	c = (int)item_s->valuedouble;
-
-	/* Parse tile size */
-	item_s = cJSON_GetObjectItem(obj, "size");
-	if (!item_s || !cJSON_IsObject(item_s))
-		ERROR_RETURN(-1);
-
-	item_t = cJSON_GetObjectItem(item_s, "w");
-	if (!item_t || !cJSON_IsNumber(item_t))
-		ERROR_RETURN(-1);
-	w = (int)item_t->valuedouble;
-
-	item_t = cJSON_GetObjectItem(item_s, "h");
-	if (!item_t || !cJSON_IsNumber(item_t))
-		ERROR_RETURN(-1);
-	h = (int)item_t->valuedouble;
-
-	/* malloc tiles array */
-	tileset->tiles = malloc(sizeof(ALLEGRO_SPRITE_TILE) * c);
-	if (!tileset->tiles)
-		ERROR_RETURN(-1);
-
-	tileset->tile_count = c;
-	tileset->tile_width = w;
-	tileset->tile_height = h;
-	tileset->tiles_down = &(tileset->tiles[0]);
-	tileset->tiles_up = &(tileset->tiles[c/4]);
-	tileset->tiles_right = &(tileset->tiles[c*2/4]);
-	tileset->tiles_left = &(tileset->tiles[c*3/4]);
-
-	/* Parse tiles */
-	item_s = cJSON_GetObjectItem(obj, "face_down");
-	if (!item_s || !cJSON_IsArray(item_s))
-		ERROR_RETURN(-1);
-	if (al_parse_sprite_tiles(tileset->tiles_down, item_s))
-		ERROR_RETURN(-1);
-
-	item_s = cJSON_GetObjectItem(obj, "face_up");
-	if (!item_s || !cJSON_IsArray(item_s))
-		ERROR_RETURN(-1);
-	if (al_parse_sprite_tiles(tileset->tiles_up, item_s))
-		ERROR_RETURN(-1);
-
-	item_s = cJSON_GetObjectItem(obj, "face_right");
-	if (!item_s || !cJSON_IsArray(item_s))
-		ERROR_RETURN(-1);
-	if (al_parse_sprite_tiles(tileset->tiles_right, item_s))
-		ERROR_RETURN(-1);
-
-	item_s = cJSON_GetObjectItem(obj, "face_left");
-	if (!item_s || !cJSON_IsArray(item_s))
-		ERROR_RETURN(-1);
-	if (al_parse_sprite_tiles(tileset->tiles_left, item_s))
-		ERROR_RETURN(-1);
-
-	return 0;
-}
-
-static int al_parse_sprite_layer(ALLEGRO_SPRITE_BITMAP_LAYER *layer, cJSON *obj)
-{
-	int ret = 0;
-	int count = 0, i;
-	cJSON *item, *item_s, *item_t;
-
-	memset(layer, 0, sizeof(ALLEGRO_SPRITE_BITMAP_LAYER));
+	memset(layer, 0, sizeof(ALLEGRO_SPRITE_TILE_LAYER));
 
 	/* Parse image info */
 	item = cJSON_GetObjectItem(obj, "image");
@@ -260,7 +192,7 @@ static int al_parse_sprite_layer(ALLEGRO_SPRITE_BITMAP_LAYER *layer, cJSON *obj)
 	if (!layer->image_file)
 		ERROR_RETURN(-1);
 	strcpy(layer->image_file, item_s->valuestring);
-		
+
 	/* Image size, width X height */
 	item_s = cJSON_GetObjectItem(item, "size");
 	if (!item_s || !cJSON_IsObject(item_s))
@@ -276,31 +208,69 @@ static int al_parse_sprite_layer(ALLEGRO_SPRITE_BITMAP_LAYER *layer, cJSON *obj)
 		ERROR_RETURN(-1);
 	layer->image_height = (int)item_t->valuedouble;
 
-	/* Get tileset count */
-	item = item->next;
-	while (item) {
-		count++;
-		item = item->next;
-	}
-	if (!count) {
-		fprintf(stderr, "Cannot find any tilesets.\n");
+	/* Parse tile info */
+	item = cJSON_GetObjectItem(obj, "tiles");
+	if (!item || !cJSON_IsObject(item))
 		ERROR_RETURN(-1);
-	}
 
-	/* Alloc tielsets array */
-	layer->tilesets = malloc(sizeof(ALLEGRO_SPRITE_TILESET) * count);
-	if (!layer->tilesets)
+	/* Parse tile count */
+	item_s = cJSON_GetObjectItem(item, "count");
+	if (!item_s || !cJSON_IsNumber(item_s))
 		ERROR_RETURN(-1);
-	layer->tileset_count = count;
+	c = (int)item_s->valuedouble;
 
-	/* Parse tilesets */
-	item = cJSON_GetObjectItem(obj, "image"); /* return to head */
-	for (i = 0; i < count; i++) {
-		item = item->next;
-		ret = al_parse_sprite_tileset(&layer->tilesets[i], item);
-		if (ret)
-			ERROR_RETURN(-1);
-	}
+	/* Parse tile size */
+	item_s = cJSON_GetObjectItem(item, "size");
+	if (!item_s || !cJSON_IsObject(item_s))
+		ERROR_RETURN(-1);
+
+	item_t = cJSON_GetObjectItem(item_s, "w");
+	if (!item_t || !cJSON_IsNumber(item_t))
+		ERROR_RETURN(-1);
+	w = (int)item_t->valuedouble;
+
+	item_t = cJSON_GetObjectItem(item_s, "h");
+	if (!item_t || !cJSON_IsNumber(item_t))
+		ERROR_RETURN(-1);
+	h = (int)item_t->valuedouble;
+
+	/* malloc tiles array */
+	layer->tiles = malloc(sizeof(ALLEGRO_SPRITE_TILE) * c);
+	if (!layer->tiles)
+		ERROR_RETURN(-1);
+
+	layer->tile_count = c;
+	layer->tile_width = w;
+	layer->tile_height = h;
+	layer->tiles_down = &(layer->tiles[0]);
+	layer->tiles_up = &(layer->tiles[c/4]);
+	layer->tiles_right = &(layer->tiles[c*2/4]);
+	layer->tiles_left = &(layer->tiles[c*3/4]);
+
+	/* Parse tiles */
+	item_s = cJSON_GetObjectItem(item, "face_down");
+	if (!item_s || !cJSON_IsArray(item_s))
+		ERROR_RETURN(-1);
+	if (al_parse_sprite_tiles(layer->tiles_down, item_s))
+		ERROR_RETURN(-1);
+
+	item_s = cJSON_GetObjectItem(item, "face_up");
+	if (!item_s || !cJSON_IsArray(item_s))
+		ERROR_RETURN(-1);
+	if (al_parse_sprite_tiles(layer->tiles_up, item_s))
+		ERROR_RETURN(-1);
+
+	item_s = cJSON_GetObjectItem(item, "face_right");
+	if (!item_s || !cJSON_IsArray(item_s))
+		ERROR_RETURN(-1);
+	if (al_parse_sprite_tiles(layer->tiles_right, item_s))
+		ERROR_RETURN(-1);
+
+	item_s = cJSON_GetObjectItem(item, "face_left");
+	if (!item_s || !cJSON_IsArray(item_s))
+		ERROR_RETURN(-1);
+	if (al_parse_sprite_tiles(layer->tiles_left, item_s))
+		ERROR_RETURN(-1);
 
 	/* Load image file to bitmap */
 	layer->bitmap = al_load_bitmap(layer->image_file);
@@ -309,9 +279,40 @@ static int al_parse_sprite_layer(ALLEGRO_SPRITE_BITMAP_LAYER *layer, cJSON *obj)
 	return 0;
 }
 
+static int al_parse_sprite_tileset(ALLEGRO_SPRITE_TILESET *tileset, cJSON *obj)
+{
+	int ret = 0;
+	int count = 0, i;
+	cJSON *item, *item_s;
+
+	memset(tileset, 0, sizeof(ALLEGRO_SPRITE_TILESET));
+
+	item = cJSON_GetObjectItem(obj, "layers");
+	if (!item || !cJSON_IsArray(item))
+		ERROR_RETURN(-1);
+
+	count = cJSON_GetArraySize(item);
+
+	/* Alloc layers array */
+	tileset->layers = malloc(sizeof(ALLEGRO_SPRITE_TILE_LAYER) * count);
+	if (!tileset->layers)
+		ERROR_RETURN(-1);
+	tileset->layer_count = count;
+
+	/* Parse layers */
+	for (i = 0; i < count; i++) {
+		item_s = cJSON_GetArrayItem(item, i);
+		ret = al_parse_sprite_layer(&tileset->layers[i], item_s);
+		if (ret)
+			ERROR_RETURN(-1);
+	}
+	return 0;
+}
+
 static int al_parse_sprite(ALLEGRO_SPRITE *s, cJSON *obj)
 {
 	int i, ret = 0;
+	int count = 0;
 	cJSON *item;
 
 	if (!s || !obj)
@@ -319,21 +320,28 @@ static int al_parse_sprite(ALLEGRO_SPRITE *s, cJSON *obj)
 
 	memset(s, 0, sizeof(ALLEGRO_SPRITE));
 
-	item = cJSON_GetObjectItem(obj, "layers");
-	if (!item || !cJSON_IsArray(item))
+	item = obj->child;
+	if (!item)
 		ERROR_RETURN(-1);
 
-	s->layer_count = cJSON_GetArraySize(item);
-	s->layers = malloc(sizeof(ALLEGRO_SPRITE_BITMAP_LAYER) * s->layer_count);
-	if (!s->layers)
-		ERROR_RETURN(-1);
-
-	for (i = 0; i < s->layer_count; i++) {
-		ret = al_parse_sprite_layer(&s->layers[i], cJSON_GetArrayItem(item, i));
-		if (ret)
-			ERROR_RETURN(ret);
+	/* Get tilesets count */
+	while(item) {
+		count++;
+		item = item->next;
 	}
 
+	s->tilesets = malloc(sizeof(ALLEGRO_SPRITE_TILESET) * count);
+	if (!s->tilesets)
+		ERROR_RETURN(-1);
+	s->tileset_count = count;
+
+	item = obj->child;
+	for (i = 0; i < s->tileset_count; i++) {
+		ret = al_parse_sprite_tileset(&s->tilesets[i], item);
+		if (ret)
+			ERROR_RETURN(ret);
+		item = item->next;
+	}
 	return 0;
 }
 
@@ -353,7 +361,7 @@ static cJSON *al_json_parse(const char *file_name)
 	fseek(fp, 0, SEEK_END);
 	size = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
-	
+
 	data = malloc(size);
 	if (!data) {
 		fprintf(stderr, "Can't malloc memory, %d bytes\n", size);
@@ -379,7 +387,7 @@ ALLEGRO_SPRITE *al_load_sprite(const char *file_name)
 	int ret;
 	cJSON *json;
 	ALLEGRO_SPRITE *s;
-	
+
 	s = malloc(sizeof(ALLEGRO_SPRITE));
 	if (!s)
 		return NULL;
@@ -391,6 +399,8 @@ ALLEGRO_SPRITE *al_load_sprite(const char *file_name)
 		al_destroy_sprite(s);
 		return NULL;
 	}
+
+	//al_dump_sprite(s);
 	return s;
 }
 
@@ -403,36 +413,38 @@ int al_draw_sprite(ALLEGRO_SPRITE *s)
 	int i;
 	int tileset_id;
 	int tile_id;
+	ALLEGRO_SPRITE_TILESET *tileset;
 	ALLEGRO_SPRITE_TILE *tiles;
 
 	if (!s->action)
 		return -1;
 
 	tileset_id = s->action->tileset_id;
+	tileset = &(s->tilesets[tileset_id]);
 
-	for (i = 0; i < s->layer_count; i++) {
+	for (i = 0; i < tileset->layer_count; i++) {
 		switch (s->direction) {
 			case ALLEGRO_SPRITE_DOWN:
-				tiles = s->layers[i].tilesets[tileset_id].tiles_down;
+				tiles = tileset->layers[i].tiles_down;
 				break;
 			case ALLEGRO_SPRITE_UP:
-				tiles = s->layers[i].tilesets[tileset_id].tiles_up;
+				tiles = tileset->layers[i].tiles_up;
 				break;
 			case ALLEGRO_SPRITE_RIGHT:
-				tiles = s->layers[i].tilesets[tileset_id].tiles_right;
+				tiles = tileset->layers[i].tiles_right;
 				break;
 			case ALLEGRO_SPRITE_LEFT:
-				tiles = s->layers[i].tilesets[tileset_id].tiles_left;
+				tiles = tileset->layers[i].tiles_left;
 			default:
 				break;
 		}
-		tile_id = s->action->counter % (s->layers[i].tilesets[tileset_id].tile_count / 4);
+		tile_id = s->action->counter % (tileset->layers[i].tile_count / 4);
 
-		al_draw_bitmap_region(s->layers[i].bitmap,
+		al_draw_bitmap_region(tileset->layers[i].bitmap,
 				tiles[tile_id].x,
 				tiles[tile_id].y,
-				s->layers[i].tilesets[tileset_id].tile_width,
-				s->layers[i].tilesets[tileset_id].tile_height,
+				tileset->layers[i].tile_width,
+				tileset->layers[i].tile_height,
 				s->x, s->y, 0);
 	}
 	return 0;
@@ -532,8 +544,8 @@ int al_sprite_start_action(ALLEGRO_SPRITE *s, int id)
 		return -1;
 
 	s->action = &s->actions[id];
-	s->w = s->layers[0].tilesets[s->action->tileset_id].tile_width;
-	s->h = s->layers[0].tilesets[s->action->tileset_id].tile_height;
+	s->w = s->tilesets[s->action->tileset_id].layers[0].tile_width;
+	s->h = s->tilesets[s->action->tileset_id].layers[0].tile_height;
 
 	s->action->running = true;
 	s->action->counter = 0;
