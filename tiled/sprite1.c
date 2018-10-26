@@ -5,8 +5,8 @@
 #include <allegro5/allegro_tiled.h>
 
 #define FPS			60
-#define MAP_DIR		"."
-#define MAP_FILE	"demo1.tmx"
+#define MAP_DIR		"../assets"
+#define MAP_FILE	"map1.tmx"
 #define SPRITE_TILE_FILE "sprites/character.png"
 
 #define BG_WIDTH		640

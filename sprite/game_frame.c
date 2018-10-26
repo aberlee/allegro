@@ -7,7 +7,7 @@
 
 #define FPS	60
 
-#define SPRITE_DIR   "./assets"
+#define SPRITE_DIR   "../assets"
 #define SPRITE_FILE  "character.json"
 
 #define BG_WIDTH		640

@@ -5,7 +5,7 @@
 
 #include "sprite.c"
 
-#define SPRITE_DIR   "./assets"
+#define SPRITE_DIR   "../assets"
 #define SPRITE_FILE  "male.json"
 
 #define BG_WIDTH		640
