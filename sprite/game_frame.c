@@ -7,7 +7,7 @@
 
 #define FPS	60
 
-#define SPRITE_FILE  "character.json"
+#define SPRITE_FILE  "assets/character.json"
 
 #define BG_WIDTH		640
 #define BG_HEIGHT		480
@@ -27,7 +27,14 @@ static ALLEGRO_TIMER *timer = NULL;
 static ALLEGRO_SPRITE *sprite = NULL;
 static bool running = true;
 static bool redraw = true;
+
 static int npc_count = 4;
+static const char *npc_file[4] = {
+		"assets/bee.json",
+		"assets/ghost.json",
+		"assets/bigworm.json",
+		"assets/eyeball.json"
+};
 static ALLEGRO_SPRITE *npc[4] = {NULL, NULL, NULL, NULL};
 
 
@@ -180,14 +187,14 @@ static int game_init_npc(void)
 {
 	int i;
 	for (i = 0; i < npc_count; i++) {
-		npc[i] = al_load_sprite(SPRITE_FILE);
+		npc[i] = al_load_sprite(npc_file[i]);
 		if (!npc[i]) {
-			fprintf(stderr, "failed to load sprite "SPRITE_FILE"!\n");
+			fprintf(stderr, "failed to load sprite %s!\n", npc_file[i]);
 			return -1;
 		}
 
 		al_sprite_set_map_size(npc[i], BG_WIDTH, BG_HEIGHT);
-		al_sprite_add_action(npc[i], STAY, 0, 2, 20, true);
+		al_sprite_add_action(npc[i], STAY, 0, 3, 20, true);
 		al_sprite_start_action(npc[i], STAY);
 	}
 
@@ -311,6 +318,28 @@ static bool game_check_arrow_key_down(ALLEGRO_KEYBOARD_STATE *key_state)
 		return false;
 }
 
+
+static void game_handle_stay_action(ALLEGRO_EVENT *event)
+{
+	int i;
+	int fps_interval;
+
+	fps_interval = al_sprite_action_fps_interval(sprite);
+	if (event->timer.count % fps_interval == 0) {
+		/* Update action animation counter */
+		al_sprite_update_action(sprite);
+		redraw = true;
+	}
+
+	for (i = 0; i < npc_count; i++) {
+		fps_interval = al_sprite_action_fps_interval(npc[i]);
+		if (event->timer.count % fps_interval == 0) {
+			/* Update action animation counter */
+			al_sprite_update_action(npc[i]);
+			redraw = true;
+		}
+	}
+}
 
 static void game_handle_walk_action(ALLEGRO_EVENT *event)
 {
@@ -508,6 +537,8 @@ static void game_handle_timer_event(ALLEGRO_EVENT *event)
 		game_handle_jump_attack_action(event);
 	else if (al_sprite_action_id(sprite) == ATTACK)
 		game_handle_attack_action(event);
+	else if (al_sprite_action_id(sprite) == STAY)
+		game_handle_stay_action(event);
 
 	/* Continue walking if arrow key is down */
 	if (al_sprite_action_id(sprite) == STAY) {
