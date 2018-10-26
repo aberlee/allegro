@@ -1,8 +1,9 @@
 CC = gcc
 CFLAGS =
 LDFLAGS = -lm -lallegro -lallegro_image -lallegro_font \
-		  -lallegro_ttf -lallegro_primitives -lallegro_tiled
-APPS = demo1 demo2 sprite1
+		  -lallegro_ttf -lallegro_primitives -lallegro_tiled \
+		  -lcjson -lcjson_utils
+APPS = demo1 demo2 sprite1 sprite_map1
 
 all: $(APPS)
 
