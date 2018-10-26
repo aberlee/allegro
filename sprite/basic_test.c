@@ -5,7 +5,8 @@
 
 #include "sprite.c"
 
-#define SPRITE_FILE  "assets/character.json"
+#define SPRITE_DIR   "./assets"
+#define SPRITE_FILE  "male.json"
 
 #define BG_WIDTH		640
 #define BG_HEIGHT		480
@@ -53,7 +54,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Load image */
-	sprite = al_load_sprite(SPRITE_FILE);
+	sprite = al_load_sprite(SPRITE_DIR, SPRITE_FILE);
 	if (!sprite) {
 		fprintf(stderr, "failed to load sprite "SPRITE_FILE"!\n");
 		return -1;
@@ -63,9 +64,9 @@ int main(int argc, char **argv)
 	al_sprite_move_to(sprite, BG_WIDTH/2, BG_HEIGHT/2);
 
 	al_sprite_add_action(sprite, STAY, 0, 2, 20, true);
-	al_sprite_add_action(sprite, WALK, 1, 4, 10, true);
-	al_sprite_add_action(sprite, JUMP, 2, 4, 10, false);
-	al_sprite_add_action(sprite, ATTACK, 4, 4, 10, false);
+	al_sprite_add_action(sprite, WALK, 0, 9, 10, true);
+	al_sprite_add_action(sprite, JUMP, 1, 6, 10, false);
+	al_sprite_add_action(sprite, ATTACK, 2, 6, 10, false);
 
 	al_sprite_start_action(sprite, STAY);
 	al_sprite_set_direction(sprite, ALLEGRO_SPRITE_LEFT);

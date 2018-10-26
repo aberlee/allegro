@@ -5,7 +5,7 @@
 	"layers": [
 		{
 			"image": {
-				"file": "assets/ghost.png",
+				"file": "ghost.png",
 				"size": {"w": 120, "h": 184}
 			},
 			"tiles": {

@@ -5,7 +5,7 @@
 	[
 		{
 			"image": {
-				"file": "assets/bee.png",
+				"file": "bee.png",
 				"size": {"w": 96, "h": 128}
 			},
 			"tiles": {

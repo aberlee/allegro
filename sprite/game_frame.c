@@ -7,7 +7,8 @@
 
 #define FPS	60
 
-#define SPRITE_FILE  "assets/character.json"
+#define SPRITE_DIR   "./assets"
+#define SPRITE_FILE  "character.json"
 
 #define BG_WIDTH		640
 #define BG_HEIGHT		480
@@ -30,10 +31,10 @@ static bool redraw = true;
 
 static int npc_count = 4;
 static const char *npc_file[4] = {
-		"assets/bee.json",
-		"assets/ghost.json",
-		"assets/bigworm.json",
-		"assets/eyeball.json"
+		"bee.json",
+		"ghost.json",
+		"bigworm.json",
+		"eyeball.json"
 };
 static ALLEGRO_SPRITE *npc[4] = {NULL, NULL, NULL, NULL};
 
@@ -163,7 +164,7 @@ static int game_init_map(void)
 
 static int game_init_sprite(void)
 {
-	sprite = al_load_sprite(SPRITE_FILE);
+	sprite = al_load_sprite(SPRITE_DIR, SPRITE_FILE);
 	if (!sprite) {
 		fprintf(stderr, "failed to load sprite "SPRITE_FILE"!\n");
 		return -1;
@@ -187,7 +188,7 @@ static int game_init_npc(void)
 {
 	int i;
 	for (i = 0; i < npc_count; i++) {
-		npc[i] = al_load_sprite(npc_file[i]);
+		npc[i] = al_load_sprite(SPRITE_DIR, npc_file[i]);
 		if (!npc[i]) {
 			fprintf(stderr, "failed to load sprite %s!\n", npc_file[i]);
 			return -1;

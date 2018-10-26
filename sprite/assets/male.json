@@ -6,7 +6,7 @@
 	[
 		{
 			"image": {
-				"file": "assets/male_walkcycle.png",
+				"file": "male_walkcycle.png",
 				"size": {"w": 576, "h": 256}
 			},
 			"tiles": {
@@ -60,7 +60,7 @@
 		},
 		{
 			"image": {
-				"file": "assets/male_walkcycle_pants.png",
+				"file": "male_walkcycle_pants.png",
 				"size": {"w": 576, "h": 256}
 			},
 			"tiles": {
@@ -121,7 +121,7 @@
 	[
 		{
 			"image": {
-				"file": "assets/male_spellcast.png",
+				"file": "male_spellcast.png",
 				"size": {"w": 448, "h": 256}
 			},
 			"tiles": {
@@ -167,7 +167,7 @@
 		},
 		{
 			"image": {
-				"file": "assets/male_spellcast_pants.png",
+				"file": "male_spellcast_pants.png",
 				"size": {"w": 448, "h": 256}
 			},
 			"tiles": {
@@ -220,7 +220,7 @@
 	[
 		{
 			"image": {
-				"file": "assets/male_slash.png",
+				"file": "male_slash.png",
 				"size": {"w": 384, "h": 256}
 			},
 			"tiles": {
@@ -262,7 +262,7 @@
 		},
 		{
 			"image": {
-				"file": "assets/male_slash_pants.png",
+				"file": "male_slash_pants.png",
 				"size": {"w": 384, "h": 256}
 			},
 			"tiles": {

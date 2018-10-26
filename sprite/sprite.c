@@ -56,6 +56,9 @@ typedef struct {
 #define MAX_ACTIONS	10
 
 struct _ALLEGRO_SPRITE {
+	/* JSON file directory */
+	char *dir;
+
 	/* Bitmap tilesets */
 	int tileset_count;
 	ALLEGRO_SPRITE_TILESET *tilesets;
@@ -112,6 +115,9 @@ void al_dump_sprite(ALLEGRO_SPRITE *s)
 int al_destroy_sprite(ALLEGRO_SPRITE *s)
 {
 	int i, j;
+
+	if (s->dir)
+		free(s->dir);
 
 	if (!s->tilesets)
 		return 0;
@@ -172,8 +178,10 @@ static int al_parse_sprite_tiles(ALLEGRO_SPRITE_TILE *tiles, cJSON *obj)
 	return 0;
 }
 
-static int al_parse_sprite_layer(ALLEGRO_SPRITE_TILE_LAYER *layer, cJSON *obj)
+static int al_parse_sprite_layer(ALLEGRO_SPRITE *s,
+				ALLEGRO_SPRITE_TILE_LAYER *layer, cJSON *obj)
 {
+	char *path;
 	cJSON *item, *item_s, *item_t;
 	int w, h, c;
 
@@ -273,13 +281,21 @@ static int al_parse_sprite_layer(ALLEGRO_SPRITE_TILE_LAYER *layer, cJSON *obj)
 		ERROR_RETURN(-1);
 
 	/* Load image file to bitmap */
-	layer->bitmap = al_load_bitmap(layer->image_file);
-	if (!layer->bitmap)
+	path = malloc(strlen(s->dir)+strlen(layer->image_file)+10);
+	if (!path)
 		ERROR_RETURN(-1);
+	sprintf(path, "%s/%s", s->dir, layer->image_file);
+	layer->bitmap = al_load_bitmap(path);
+	if (!layer->bitmap) {
+		free(path);
+		ERROR_RETURN(-1);
+	}
+	free(path);
 	return 0;
 }
 
-static int al_parse_sprite_tileset(ALLEGRO_SPRITE_TILESET *tileset, cJSON *obj)
+static int al_parse_sprite_tileset(ALLEGRO_SPRITE *s,
+				ALLEGRO_SPRITE_TILESET *tileset, cJSON *obj)
 {
 	int ret = 0;
 	int count = 0, i;
@@ -302,7 +318,7 @@ static int al_parse_sprite_tileset(ALLEGRO_SPRITE_TILESET *tileset, cJSON *obj)
 	/* Parse layers */
 	for (i = 0; i < count; i++) {
 		item_s = cJSON_GetArrayItem(item, i);
-		ret = al_parse_sprite_layer(&tileset->layers[i], item_s);
+		ret = al_parse_sprite_layer(s, &tileset->layers[i], item_s);
 		if (ret)
 			ERROR_RETURN(-1);
 	}
@@ -317,8 +333,6 @@ static int al_parse_sprite(ALLEGRO_SPRITE *s, cJSON *obj)
 
 	if (!s || !obj)
 		ERROR_RETURN(-1);
-
-	memset(s, 0, sizeof(ALLEGRO_SPRITE));
 
 	item = obj->child;
 	if (!item)
@@ -337,7 +351,7 @@ static int al_parse_sprite(ALLEGRO_SPRITE *s, cJSON *obj)
 
 	item = obj->child;
 	for (i = 0; i < s->tileset_count; i++) {
-		ret = al_parse_sprite_tileset(&s->tilesets[i], item);
+		ret = al_parse_sprite_tileset(s, &s->tilesets[i], item);
 		if (ret)
 			ERROR_RETURN(ret);
 		item = item->next;
@@ -345,16 +359,16 @@ static int al_parse_sprite(ALLEGRO_SPRITE *s, cJSON *obj)
 	return 0;
 }
 
-static cJSON *al_json_parse(const char *file_name)
+static cJSON *al_json_parse(const char *filepath)
 {
 	FILE *fp = NULL;
 	char *data = NULL;
 	int size = 0;
 	cJSON *json = NULL;
 
-	fp = fopen(file_name, "r");
+	fp = fopen(filepath, "r");
 	if (!fp) {
-		fprintf(stderr, "Open file [%s] error!\n", file_name);
+		fprintf(stderr, "Open file [%s] error!\n", filepath);
 		goto exit;
 	}
 
@@ -382,17 +396,30 @@ exit:
 	return json;
 }
 
-ALLEGRO_SPRITE *al_load_sprite(const char *file_name)
+ALLEGRO_SPRITE *al_load_sprite(const char *dir, const char *filename)
 {
 	int ret;
 	cJSON *json;
 	ALLEGRO_SPRITE *s;
+	char *path;
 
-	s = malloc(sizeof(ALLEGRO_SPRITE));
-	if (!s)
+	path = malloc(strlen(dir)+strlen(filename)+10);
+	if (!path)
 		return NULL;
 
-	json = al_json_parse(file_name);
+	s = malloc(sizeof(ALLEGRO_SPRITE));
+	if (!s) {
+		free(path);
+		return NULL;
+	}
+
+	memset(s, 0, sizeof(ALLEGRO_SPRITE));
+
+	sprintf(path, "%s/%s", dir, filename);
+	json = al_json_parse(path);
+
+	s->dir = path;
+	strcpy(s->dir, dir);
 
 	ret = al_parse_sprite(s, json);
 	if (ret) {

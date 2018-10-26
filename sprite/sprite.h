@@ -10,10 +10,10 @@ typedef enum {
 
 typedef struct _ALLEGRO_SPRITE ALLEGRO_SPRITE;
 
+ALLEGRO_SPRITE *al_load_sprite(const char *dir, const char *filename);
+
 void al_dump_sprite(ALLEGRO_SPRITE *s);
 int al_destroy_sprite(ALLEGRO_SPRITE *s);
-
-ALLEGRO_SPRITE *al_load_sprite(const char *file_name);
 
 int al_draw_sprite(ALLEGRO_SPRITE *s);
 

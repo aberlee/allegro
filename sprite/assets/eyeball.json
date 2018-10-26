@@ -5,7 +5,7 @@
 	"layers": [
 		{
 			"image": {
-				"file": "assets/eyeball.png",
+				"file": "eyeball.png",
 				"size": {"w": 96, "h": 152}
 			},
 			"tiles": {

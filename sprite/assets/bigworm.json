@@ -6,7 +6,7 @@
 	[
 		{
 			"image": {
-				"file": "assets/bigworm.png",
+				"file": "bigworm.png",
 				"size": {"w": 105, "h": 200}
 			},
 			"tiles": {
