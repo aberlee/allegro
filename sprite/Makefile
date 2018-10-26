@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS =
+CFLAGS = -Wall
 LDFLAGS = -lm -lallegro -lallegro_image -lallegro_font \
 		  -lallegro_ttf -lallegro_primitives -lallegro_tiled \
 		  -lcjson -lcjson_utils 

@@ -15,9 +15,10 @@
 
 enum {
 	STAY = 0,
-	WALK = 1,
-	JUMP = 2,
-	ATTACK = 3
+	WALK,
+	JUMP,
+	ATTACK,
+	JUMP_ATTACK,
 };
 
 static ALLEGRO_DISPLAY *display = NULL;
@@ -41,15 +42,16 @@ static int game_init_sprite(void)
 	}
 
 	al_sprite_set_map_size(sprite, BG_WIDTH, BG_HEIGHT);
-	al_sprite_set_position(sprite, BG_WIDTH/2, BG_HEIGHT/2);
+	al_sprite_move_to(sprite, BG_WIDTH/2, BG_HEIGHT/2);
 
-	al_sprite_add_action(sprite, STAY, 0);
-	al_sprite_add_action(sprite, WALK, 1);
-	al_sprite_add_action(sprite, JUMP, 2);
-	al_sprite_add_action(sprite, ATTACK, 4);
+	al_sprite_add_action(sprite, STAY, 0, 2, 20, true);
+	al_sprite_add_action(sprite, WALK, 1, 4, 10, true);
+	al_sprite_add_action(sprite, JUMP, 2, 4, 10, false);
+	al_sprite_add_action(sprite, ATTACK, 4, 4, 10, false);
+	al_sprite_add_action(sprite, JUMP_ATTACK, 4, 4, 10, false);
 
 	al_sprite_start_action(sprite, STAY);
-	al_sprite_turn_left(sprite);
+	al_sprite_set_direction(sprite, ALLEGRO_SPRITE_LEFT);
 	return 0;
 }
 
@@ -147,150 +149,240 @@ static bool game_check_arrow_key_down(ALLEGRO_KEYBOARD_STATE *key_state)
 		return false;
 }
 
-static void game_handle_timer_event(ALLEGRO_EVENT *event)
-{
-	ALLEGRO_KEYBOARD_STATE key_state;
 
-	/* No action, just return */
-	if (!al_sprite_action_running(sprite))
+static void game_handle_walk_action(ALLEGRO_EVENT *event)
+{
+	int step_x = 0;
+	int step_y = 0;
+	int fps_interval;
+
+	fps_interval = al_sprite_action_fps_interval(sprite);
+	if (event->timer.count % fps_interval != 0)
 		return;
 
-	if (event->timer.count % 10 != 0)
+	/* Update action animation counter */
+	al_sprite_update_action(sprite);
+	redraw = true;
+
+	switch (al_sprite_get_direction(sprite)) {
+		case ALLEGRO_SPRITE_DOWN:
+			step_y = 4;
+			break;
+		case ALLEGRO_SPRITE_UP:
+			step_y = -4;
+			break;
+		case ALLEGRO_SPRITE_RIGHT:
+			step_x = 4;
+			break;
+		case ALLEGRO_SPRITE_LEFT:
+			step_x = -4;
+			break;
+		default:
+			break;
+	}
+
+	al_sprite_move_step(sprite, step_x, step_y);
+}
+
+static void game_handle_jump_action(ALLEGRO_EVENT *event)
+{
+	ALLEGRO_KEYBOARD_STATE key_state;
+	int step_x = 0;
+	int step_y = 0;
+	int counter;
+	int counter_max;
+	int fps_interval;
+
+	fps_interval = al_sprite_action_fps_interval(sprite);
+	if (event->timer.count % fps_interval != 0)
 		return;
 
 	al_get_keyboard_state(&key_state);
 
-	/* Update action animation */
+	/* Update action animation counter */
 	al_sprite_update_action(sprite);
 	redraw = true;
 
-	/* Handle walking action */
-	if (al_sprite_action_id(sprite) == WALK) {
-		switch (al_sprite_face_direction(sprite)) {
-			case ALLEGRO_SPRITE_FACE_DOWN:
-				al_sprite_move(sprite, 0, 4);
-				break;
-			case ALLEGRO_SPRITE_FACE_UP:
-				al_sprite_move(sprite, 0, -4);
-				break;
-			case ALLEGRO_SPRITE_FACE_RIGHT:
-				al_sprite_move(sprite, 4, 0);
-				break;
-			case ALLEGRO_SPRITE_FACE_LEFT:
-				al_sprite_move(sprite, -4, 0);
-				break;
-			default:
-				break;
-		}
-	}
-	
-	/* Handle jumping action */
-	if (al_sprite_action_id(sprite) == JUMP) {
-		int x = 0, y = 0;
-		int c = al_sprite_action_counter(sprite);
+	counter = al_sprite_action_counter(sprite);
+	counter_max = al_sprite_action_counter_max(sprite);
 
-		if (game_check_arrow_key_down(&key_state)){
-			if (al_key_down(&key_state, ALLEGRO_KEY_LEFT))
-				x = -4;
-			else if (al_key_down(&key_state, ALLEGRO_KEY_RIGHT))
-				x = 4;
-			else if (al_key_down(&key_state, ALLEGRO_KEY_UP))
-				y = -4;
-			else if (al_key_down(&key_state, ALLEGRO_KEY_DOWN))
-				y = 4;
-		}
-
-		if (c <= 2)
-			al_sprite_move(sprite, x, y-8);
-		else if (c <= 4)
-			al_sprite_move(sprite, x, y+8);
-		else {
-			al_sprite_stop_action(sprite);
-			al_sprite_start_action(sprite, STAY);
-		}
+	if (game_check_arrow_key_down(&key_state)){
+		if (al_key_down(&key_state, ALLEGRO_KEY_LEFT))
+			step_x = -4;
+		else if (al_key_down(&key_state, ALLEGRO_KEY_RIGHT))
+			step_x = 4;
+		else if (al_key_down(&key_state, ALLEGRO_KEY_UP))
+			step_y = -4;
+		else if (al_key_down(&key_state, ALLEGRO_KEY_DOWN))
+			step_y = 4;
 	}
 
-	/* Handle attacking action */
-	if (al_sprite_action_id(sprite) == ATTACK) {
-		int x = 0, y = 0;
-		int c = al_sprite_action_counter(sprite);
-
-		if (game_check_arrow_key_down(&key_state)){
-			if (al_key_down(&key_state, ALLEGRO_KEY_LEFT))
-				x = -4;
-			else if (al_key_down(&key_state, ALLEGRO_KEY_RIGHT))
-				x = 4;
-			else if (al_key_down(&key_state, ALLEGRO_KEY_UP))
-				y = -4;
-			else if (al_key_down(&key_state, ALLEGRO_KEY_DOWN))
-				y = 4;
-		}
-
-		if (al_key_down(&key_state, ALLEGRO_KEY_SPACE)) {
-			if (c <= 2)
-				y -= 8;
-			else if (c <= 4)
-				y += 8;
-		}
-
-		if (c > 4) {
-			al_sprite_stop_action(sprite);
-			al_sprite_start_action(sprite, STAY);
-		} else if (x != 0 || y != 0)
-			al_sprite_move(sprite, x, y);
+	/* Check attack key */
+	if (al_key_down(&key_state, ALLEGRO_KEY_A)) {
+		al_sprite_start_action(sprite, JUMP_ATTACK);
+		al_sprite_action_set_counter(sprite, counter);
 	}
+
+	if (counter <= counter_max/2)
+		al_sprite_move_step(sprite, step_x, step_y-8);
+	else if (counter <= counter_max)
+		al_sprite_move_step(sprite, step_x, step_y+8);
+	else
+		al_sprite_start_action(sprite, STAY);
+}
+
+static void game_handle_jump_attack_action(ALLEGRO_EVENT *event)
+{
+	ALLEGRO_KEYBOARD_STATE key_state;
+	int step_x = 0;
+	int step_y = 0;
+	int counter;
+	int counter_max;
+	int fps_interval;
+
+	fps_interval = al_sprite_action_fps_interval(sprite);
+	if (event->timer.count % fps_interval != 0)
+		return;
+
+	al_get_keyboard_state(&key_state);
+
+	/* Update action animation counter */
+	al_sprite_update_action(sprite);
+	redraw = true;
+
+	counter = al_sprite_action_counter(sprite);
+	counter_max = al_sprite_action_counter_max(sprite);
+
+	if (game_check_arrow_key_down(&key_state)){
+		if (al_key_down(&key_state, ALLEGRO_KEY_LEFT))
+			step_x = -4;
+		else if (al_key_down(&key_state, ALLEGRO_KEY_RIGHT))
+			step_x = 4;
+		else if (al_key_down(&key_state, ALLEGRO_KEY_UP))
+			step_y = -4;
+		else if (al_key_down(&key_state, ALLEGRO_KEY_DOWN))
+			step_y = 4;
+	}
+
+	if (counter <= counter_max/2)
+		al_sprite_move_step(sprite, step_x, step_y-8);
+	else if (counter <= counter_max)
+		al_sprite_move_step(sprite, step_x, step_y+8);
+	else
+		al_sprite_start_action(sprite, STAY);
+}
+
+static void game_handle_attack_action(ALLEGRO_EVENT *event)
+{
+	ALLEGRO_KEYBOARD_STATE key_state;
+	int step_x = 0;
+	int step_y = 0;
+	int counter;
+	int counter_max;
+	int fps_interval;
+
+	fps_interval = al_sprite_action_fps_interval(sprite);
+	if (event->timer.count % fps_interval != 0)
+		return;
+
+	al_get_keyboard_state(&key_state);
+
+	/* Update action animation counter */
+	al_sprite_update_action(sprite);
+	redraw = true;
+
+	counter = al_sprite_action_counter(sprite);
+	counter_max = al_sprite_action_counter_max(sprite);
+
+	if (game_check_arrow_key_down(&key_state)){
+		if (al_key_down(&key_state, ALLEGRO_KEY_LEFT))
+			step_x = -4;
+		else if (al_key_down(&key_state, ALLEGRO_KEY_RIGHT))
+			step_x = 4;
+		else if (al_key_down(&key_state, ALLEGRO_KEY_UP))
+			step_y = -4;
+		else if (al_key_down(&key_state, ALLEGRO_KEY_DOWN))
+			step_y = 4;
+	}
+
+	if (counter > counter_max)
+		al_sprite_start_action(sprite, STAY);
+	else if (step_x != 0 || step_y != 0)
+		al_sprite_move_step(sprite, step_x, step_y);
+}
+
+static void game_handle_timer_event(ALLEGRO_EVENT *event)
+{
+	/* No action, just return */
+	if (!al_sprite_action_running(sprite))
+		return;
+
+	if (al_sprite_action_id(sprite) == WALK)
+		game_handle_walk_action(event);
+	else if (al_sprite_action_id(sprite) == JUMP)
+		game_handle_jump_action(event);
+	else if (al_sprite_action_id(sprite) == JUMP_ATTACK)
+		game_handle_jump_attack_action(event);
+	else if (al_sprite_action_id(sprite) == ATTACK)
+		game_handle_attack_action(event);
 
 	/* Continue walking if arrow key is down */
 	if (al_sprite_action_id(sprite) == STAY) {
-		if (game_check_arrow_key_down(&key_state)) {
-			al_sprite_stop_action(sprite);
+		ALLEGRO_KEYBOARD_STATE key_state;
+		al_get_keyboard_state(&key_state);
+		if (game_check_arrow_key_down(&key_state))
 			al_sprite_start_action(sprite, WALK);
-		}
 	}
 }
 
-static int game_handle_key_down_event(int keycode)
+static void game_handle_key_down_event(int keycode)
 {
 	/* Start to jump */
 	if (keycode == ALLEGRO_KEY_SPACE) {
-		al_sprite_start_action(sprite, JUMP);
-		redraw = true;
+		if (al_sprite_action_stopable(sprite)) {
+			al_sprite_start_action(sprite, JUMP);
+			redraw = true;
+		}
 	}
 	/* Start to attack */
 	else if (keycode == ALLEGRO_KEY_A) {
-		al_sprite_start_action(sprite, ATTACK);
-		redraw = true;
+		if (al_sprite_action_stopable(sprite)) {
+			al_sprite_start_action(sprite, ATTACK);
+			redraw = true;
+		}
 	}
 	/* Start to walk */
 	else if (game_check_arrow_key(keycode)) {
-		al_sprite_start_action(sprite, WALK);
-		redraw = true;
+		if (al_sprite_action_stopable(sprite))
+			al_sprite_start_action(sprite, WALK);
 
 		/* Update sprite direction */
 		switch (keycode) {
 			case ALLEGRO_KEY_DOWN:
-				al_sprite_turn_down(sprite);
+				al_sprite_set_direction(sprite, ALLEGRO_SPRITE_DOWN);
 				break;
 			case ALLEGRO_KEY_UP:
-				al_sprite_turn_up(sprite);
+				al_sprite_set_direction(sprite, ALLEGRO_SPRITE_UP);
 				break;
 			case ALLEGRO_KEY_RIGHT:
-				al_sprite_turn_right(sprite);
+				al_sprite_set_direction(sprite, ALLEGRO_SPRITE_RIGHT);
 				break;
 			case ALLEGRO_KEY_LEFT:
-				al_sprite_turn_left(sprite);
+				al_sprite_set_direction(sprite, ALLEGRO_SPRITE_LEFT);
 				break;
 			default:
 				break;
 		}
+
+		redraw = true;
 	}
 }
 
 static void game_handle_key_up_event(int keycode)
 {
 	/* Stop walking */
-	if (game_check_arrow_key(keycode)) {
-		al_sprite_stop_action(sprite);
+	if (game_check_arrow_key(keycode)
+		&& al_sprite_action_id(sprite) == WALK) {
 		al_sprite_start_action(sprite, STAY);
 		redraw = true;
 	}
