@@ -64,6 +64,8 @@ struct _ALLEGRO_SPRITE {
 	ALLEGRO_SPRITE_TILESET *tilesets;
 
 	/* The size of map that sprite is in */
+	int map_x;
+	int map_y;
 	int map_width;
 	int map_height;
 
@@ -449,6 +451,7 @@ int al_draw_sprite(ALLEGRO_SPRITE *s)
 	tileset_id = s->action->tileset_id;
 	tileset = &(s->tilesets[tileset_id]);
 
+	printf("SPRITE REAL x = %d, y = %d, map_y = %d\n", s->x-s->map_x, s->y - s->map_y, s->map_y);
 	for (i = 0; i < tileset->layer_count; i++) {
 		switch (s->direction) {
 			case ALLEGRO_SPRITE_DOWN:
@@ -472,7 +475,7 @@ int al_draw_sprite(ALLEGRO_SPRITE *s)
 				tiles[tile_id].y,
 				tileset->layers[i].tile_width,
 				tileset->layers[i].tile_height,
-				s->x, s->y, 0);
+				s->x-s->map_x, s->y-s->map_y, 0);
 	}
 	return 0;
 }
@@ -480,6 +483,12 @@ int al_draw_sprite(ALLEGRO_SPRITE *s)
 /***************************************************************************************/
 /********** Sprite Position Control ****************************************************/
 /***************************************************************************************/
+
+void al_sprite_set_map_pos(ALLEGRO_SPRITE *s, int map_x, int map_y)
+{
+	s->map_x = map_x;
+	s->map_y = map_y;
+}
 
 void al_sprite_set_map_size(ALLEGRO_SPRITE *s, int map_w, int map_h)
 {

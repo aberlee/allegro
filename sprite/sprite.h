@@ -17,6 +17,7 @@ int al_destroy_sprite(ALLEGRO_SPRITE *s);
 
 int al_draw_sprite(ALLEGRO_SPRITE *s);
 
+void al_sprite_set_map_pos(ALLEGRO_SPRITE *s, int map_x, int map_y);
 void al_sprite_set_map_size(ALLEGRO_SPRITE *s, int map_w, int map_h);
 void al_sprite_move_to(ALLEGRO_SPRITE *s, int x, int y);
 void al_sprite_move_step(ALLEGRO_SPRITE *s, int step_x, int step_y);

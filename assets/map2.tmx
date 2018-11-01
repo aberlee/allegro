@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="right-down" width="220" height="18" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="21">
+<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="right-down" width="220" height="18" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="57">
  <tileset firstgid="1" name="TileKit" tilewidth="32" tileheight="32" tilecount="228" columns="12">
   <image source="tilesets/TileKit.png" width="384" height="608"/>
  </tileset>
@@ -24,65 +24,40 @@
   </data>
  </layer>
  <objectgroup id="5" name="GroundObjects">
-  <object id="1" x="0" y="480">
-   <polyline points="0,0 128,0 128,32 96,32 96,96"/>
-  </object>
-  <object id="2" x="224" y="480">
-   <polyline points="0,0 0,32 32,32 32,96 160,96 160,32 192,32 192,0 0,0"/>
-  </object>
-  <object id="3" x="608" y="448">
-   <polyline points="0,0 0,32 32,32 32,96 64,96 64,128 128,128 128,96 160,96 160,32 192,32 192,0 0,0"/>
-  </object>
-  <object id="4" x="64" y="352">
-   <polyline points="0,0 224,0 736,0"/>
-  </object>
-  <object id="5" x="864" y="288">
-   <polyline points="0,0 0,32 64,32 64,0 0,0"/>
-  </object>
-  <object id="6" x="992" y="224">
-   <polyline points="0,0 0,32 64,32 64,0 0,0"/>
-  </object>
-  <object id="7" x="1152" y="192">
-   <polyline points="0,0 0,32 64,32 64,0 0,0"/>
-  </object>
-  <object id="8" x="1344" y="192">
-   <polyline points="0,0 0,32 64,32 64,0 0,0"/>
-  </object>
-  <object id="9" x="1536" y="224">
-   <polyline points="0,0 0,32 64,32 64,0 0,0"/>
-  </object>
-  <object id="10" x="960" y="448">
-   <polyline points="0,0 0,32 32,32 32,96 64,96 64,128 128,128 128,96 160,96 160,32 192,32 192,0 0,0"/>
-  </object>
-  <object id="11" x="1344" y="448">
-   <polyline points="0,0 0,32 32,32 32,96 64,96 64,128 128,128 128,96 160,96 160,32 192,32 192,0 0,0"/>
-  </object>
-  <object id="12" x="1664" y="576">
-   <polyline points="0,0 0,-128 -64,-128 -64,-160 160,-160 160,-352 288,-352 288,-160 448,-160 448,-128 384,-128 384,0"/>
-  </object>
-  <object id="13" x="1952" y="224">
-   <polyline points="0,0 320,0"/>
-  </object>
-  <object id="14" x="2272" y="224">
-   <polyline points="0,0 0,352 64,352 64,0 0,0"/>
-  </object>
-  <object id="15" x="2336" y="224">
-   <polyline points="0,0 576,0"/>
-  </object>
-  <object id="16" x="2944" y="576">
-   <polyline points="0,0 0,-320 -32,-320 -32,-352 32,-352 32,-480 128,-480 128,-352 352,-352 352,-320 160,-320 160,0"/>
-  </object>
-  <object id="17" x="3072" y="96">
-   <polyline points="0,0 512,0"/>
-  </object>
-  <object id="18" x="3584" y="576">
-   <polyline points="0,0 0,-480 64,-480 64,-384 128,-384 128,-320 192,-320 192,-288 256,-288 256,-224 320,-224 320,-160 384,-160 384,-128 576,-128 576,-96 544,-96 544,-32 512,-32 512,0"/>
-  </object>
-  <object id="19" x="4160" y="448">
-   <polyline points="0,0 288,0"/>
-  </object>
-  <object id="20" x="4448" y="448">
-   <polyline points="0,0 0,32 32,32 32,96 64,96 64,128 128,128 128,96 160,96 160,32 192,32 192,0 0,0"/>
-  </object>
+  <object id="21" x="1" y="483" width="125" height="29"/>
+  <object id="22" x="2" y="515" width="90" height="58"/>
+  <object id="23" x="224" y="482" width="193" height="28"/>
+  <object id="24" x="256" y="512" width="128" height="61"/>
+  <object id="25" x="64" y="354" width="736" height="17.3333"/>
+  <object id="26" x="606.667" y="448" width="193.333" height="30.6667"/>
+  <object id="27" x="642.667" y="480" width="122.667" height="60"/>
+  <object id="28" x="674.667" y="542.667" width="58.6667" height="33.3333"/>
+  <object id="29" x="958.667" y="452" width="193.333" height="24"/>
+  <object id="30" x="994.667" y="478.667" width="125.333" height="58.6667"/>
+  <object id="31" x="1024" y="541.333" width="61.3333" height="30.6667"/>
+  <object id="32" x="862.667" y="289.333" width="68" height="26.6667"/>
+  <object id="33" x="989.333" y="225.333" width="68" height="25.3333"/>
+  <object id="34" x="1148" y="193.333" width="72" height="24"/>
+  <object id="35" x="1340" y="194.667" width="70.6667" height="22.6667"/>
+  <object id="36" x="1532" y="224" width="72" height="30.6667"/>
+  <object id="37" x="1340" y="449.333" width="194.667" height="29.3333"/>
+  <object id="38" x="1376" y="481.333" width="128" height="57.3333"/>
+  <object id="39" x="1404" y="544" width="65.3333" height="28"/>
+  <object id="40" x="1689.33" y="320" width="137.333" height="21.3333"/>
+  <object id="41" x="1596" y="418.667" width="518.667" height="28"/>
+  <object id="42" x="1665.33" y="452" width="384" height="121.333"/>
+  <object id="43" x="1821.33" y="224" width="449.333" height="21.3333"/>
+  <object id="44" x="2273.33" y="226.667" width="60" height="345.333"/>
+  <object id="45" x="2338.67" y="222.667" width="634.667" height="20"/>
+  <object id="46" x="2945.33" y="250.667" width="157.333" height="324"/>
+  <object id="47" x="2973.33" y="96" width="674.667" height="124"/>
+  <object id="49" x="3650.67" y="193.333" width="62.6667" height="64"/>
+  <object id="50" x="3714.67" y="256" width="62.6667" height="28"/>
+  <object id="51" x="3776" y="288" width="66.6667" height="62.6667"/>
+  <object id="52" x="3840" y="354.667" width="64" height="65.3333"/>
+  <object id="53" x="3904" y="418.667" width="66.6667" height="34.6667"/>
+  <object id="54" x="3969.33" y="450.667" width="185.333" height="32"/>
+  <object id="55" x="4158.67" y="450.667" width="485.333" height="26.6667"/>
+  <object id="56" x="4546.67" y="481.333" width="58.6667" height="92"/>
  </objectgroup>
 </map>
